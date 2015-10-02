@@ -38,12 +38,16 @@ type Handler interface {
 }
 
 // ListenAndServe is the equivalent to http's method.
-func ListenAndServe(address string, appName string, handler Handler) error {
+func ListenAndServe(address string, appName string, f func() (Handler, error)) error {
 	appEnv := &AppEnv{}
 	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: DefaultEnv}); err != nil {
 		return handleErrorBeforeStart(err)
 	}
 	if err := setupLogging(appName, appEnv.LogDir, appEnv.SyslogNetwork, appEnv.SyslogAddress); err != nil {
+		return handleErrorBeforeStart(err)
+	}
+	handler, err := f()
+	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
 	server := &graceful.Server{
