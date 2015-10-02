@@ -15,17 +15,33 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 type Call struct {
-	Path       string                    `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
-	StatusCode uint32                    `protobuf:"varint,2,opt,name=status_code" json:"status_code,omitempty"`
-	Duration   *google_protobuf.Duration `protobuf:"bytes,3,opt,name=duration" json:"duration,omitempty"`
-	WriteError string                    `protobuf:"bytes,4,opt,name=write_error" json:"write_error,omitempty"`
-	PanicError string                    `protobuf:"bytes,5,opt,name=panic_error" json:"panic_error,omitempty"`
-	PanicStack string                    `protobuf:"bytes,6,opt,name=panic_stack" json:"panic_stack,omitempty"`
+	Path           string                    `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
+	RequestHeader  map[string]string         `protobuf:"bytes,2,rep,name=request_header" json:"request_header,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ResponseHeader map[string]string         `protobuf:"bytes,3,rep,name=response_header" json:"response_header,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	StatusCode     uint32                    `protobuf:"varint,4,opt,name=status_code" json:"status_code,omitempty"`
+	Duration       *google_protobuf.Duration `protobuf:"bytes,5,opt,name=duration" json:"duration,omitempty"`
+	WriteError     string                    `protobuf:"bytes,6,opt,name=write_error" json:"write_error,omitempty"`
+	PanicError     string                    `protobuf:"bytes,7,opt,name=panic_error" json:"panic_error,omitempty"`
+	PanicStack     string                    `protobuf:"bytes,8,opt,name=panic_stack" json:"panic_stack,omitempty"`
 }
 
 func (m *Call) Reset()         { *m = Call{} }
 func (m *Call) String() string { return proto.CompactTextString(m) }
 func (*Call) ProtoMessage()    {}
+
+func (m *Call) GetRequestHeader() map[string]string {
+	if m != nil {
+		return m.RequestHeader
+	}
+	return nil
+}
+
+func (m *Call) GetResponseHeader() map[string]string {
+	if m != nil {
+		return m.ResponseHeader
+	}
+	return nil
+}
 
 func (m *Call) GetDuration() *google_protobuf.Duration {
 	if m != nil {

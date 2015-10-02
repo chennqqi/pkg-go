@@ -23,10 +23,12 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 	wrapperResponseWriter := newWrapperResponseWriter(responseWriter)
 	defer func() {
 		call := &Call{
-			Path:       request.URL.Path,
-			StatusCode: uint32(wrapperResponseWriter.statusCode),
-			Duration:   prototime.DurationToProto(time.Since(start)),
-			WriteError: errorString(wrapperResponseWriter.writeError),
+			Path:           request.URL.Path,
+			RequestHeader:  headerMap(request.Header),
+			ResponseHeader: headerMap(wrapperResponseWriter.Header()),
+			StatusCode:     uint32(wrapperResponseWriter.statusCode),
+			Duration:       prototime.DurationToProto(time.Since(start)),
+			WriteError:     errorString(wrapperResponseWriter.writeError),
 		}
 		if recoverErr := recover(); recoverErr != nil {
 			stack := make([]byte, 8192)
@@ -37,6 +39,19 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 		protolog.Info(call)
 	}()
 	h.Handler.ServeHTTP(wrapperResponseWriter, request)
+}
+
+// TODO(pedge): losing repeated fields, but seems cleaner for logging
+// should we do repeated fields?
+func headerMap(header http.Header) map[string]string {
+	if header == nil {
+		return nil
+	}
+	m := make(map[string]string)
+	for key := range header {
+		m[key] = header.Get(key)
+	}
+	return m
 }
 
 func errorString(err error) string {

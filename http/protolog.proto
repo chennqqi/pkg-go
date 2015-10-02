@@ -6,11 +6,13 @@ package pkghttp;
 
 message Call {
   string path = 1;
-  uint32 status_code = 2;
-  google.protobuf.Duration duration = 3;
-  string write_error = 4;
-  string panic_error = 5;
-  string panic_stack = 6;
+  map<string, string> request_header = 2;
+  map<string, string> response_header = 3;
+  uint32 status_code = 4;
+  google.protobuf.Duration duration = 5;
+  string write_error = 6;
+  string panic_error = 7;
+  string panic_stack = 8;
 }
 
 message ServerCouldNotStart {
