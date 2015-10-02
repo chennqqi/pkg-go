@@ -17,14 +17,12 @@ import (
 )
 
 var (
-	// DefaultEnv is the default environment variable values.
-	DefaultEnv = map[string]string{
+	defaultEnv = map[string]string{
 		"SHUTDOWN_TIMEOUT_SEC": "10",
 	}
 )
 
-// AppEnv has the environment variables that must be set.
-type AppEnv struct {
+type appEnv struct {
 	Port               uint16 `env:"PORT,required"`
 	LogDir             string `env:"LOG_DIR"`
 	SyslogNetwork      string `env:"SYSLOG_NETWORK"`
@@ -32,20 +30,14 @@ type AppEnv struct {
 	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC"`
 }
 
-// Handler handles HTTP calls.
-type Handler interface {
-	// ServeHTTP is equivalent to http's method, but has a return value of the status code.
-	ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) int
-}
-
 // ListenAndServe is the equivalent to http's method.
-func ListenAndServe(appName string, f func() (Handler, error)) {
+func ListenAndServe(appName string, f func() (http.Handler, error)) {
 	_ = listenAndServe(appName, f)
 }
 
-func listenAndServe(appName string, f func() (Handler, error)) error {
-	appEnv := &AppEnv{}
-	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: DefaultEnv}); err != nil {
+func listenAndServe(appName string, f func() (http.Handler, error)) error {
+	appEnv := &appEnv{}
+	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: defaultEnv}); err != nil {
 		return handleErrorBeforeStart(err)
 	}
 	if err := setupLogging(appName, appEnv.LogDir, appEnv.SyslogNetwork, appEnv.SyslogAddress); err != nil {
@@ -59,7 +51,7 @@ func listenAndServe(appName string, f func() (Handler, error)) error {
 		Timeout: time.Duration(appEnv.ShutdownTimeoutSec) * time.Second,
 		Server: &http.Server{
 			Addr:    fmt.Sprintf(":%d", appEnv.Port),
-			Handler: newInternalHandler(handler),
+			Handler: newWrapperHandler(handler),
 		},
 	}
 	protolog.Info(
@@ -135,24 +127,4 @@ func handleErrorBeforeStart(err error) error {
 		},
 	)
 	return err
-}
-
-type internalHandler struct {
-	handler Handler
-}
-
-func newInternalHandler(handler Handler) *internalHandler {
-	return &internalHandler{handler}
-}
-
-func (h *internalHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
-	start := time.Now()
-	statusCode := h.handler.ServeHTTP(responseWriter, request)
-	protolog.Info(
-		&Call{
-			Path:       request.URL.Path,
-			StatusCode: uint32(statusCode),
-			Duration:   prototime.DurationToProto(time.Since(start)),
-		},
-	)
 }
