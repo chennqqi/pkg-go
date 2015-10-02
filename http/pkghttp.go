@@ -61,7 +61,7 @@ func ListenAndServe(address string, appName string, f func() (Handler, error)) e
 		&ServerStarting{},
 	)
 	start := time.Now()
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	serverFinished := &ServerFinished{
 		Duration: prototime.DurationToProto(time.Since(start)),
 	}
