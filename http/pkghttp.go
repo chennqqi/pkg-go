@@ -1,11 +1,16 @@
 package pkghttp // import "go.pedge.io/pkg/http"
 import (
+	"errors"
 	"fmt"
 	"log/syslog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/mihasya/go-metrics-librato"
+	"github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics/stathat"
 
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/tylerb/graceful.v1"
@@ -17,25 +22,40 @@ import (
 )
 
 var (
+	// ErrRequireAppName is the error returned if appName is not set.
+	ErrRequireAppName = errors.New("pkghttp: appName must be set")
+	// ErrRequireHandlerProvider is the error returned if handlerProvider is not set.
+	ErrRequireHandlerProvider = errors.New("pkghttp: handlerProvider must be set")
+
 	defaultEnv = map[string]string{
 		"SHUTDOWN_TIMEOUT_SEC": "10",
 	}
 )
 
 type appEnv struct {
-	Port               uint16 `env:"PORT,required"`
-	LogDir             string `env:"LOG_DIR"`
-	SyslogNetwork      string `env:"SYSLOG_NETWORK"`
-	SyslogAddress      string `env:"SYSLOG_ADDRESS"`
-	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC"`
+	Port                uint16 `env:"PORT,required"`
+	LogDir              string `env:"LOG_DIR"`
+	SyslogNetwork       string `env:"SYSLOG_NETWORK"`
+	SyslogAddress       string `env:"SYSLOG_ADDRESS"`
+	ShutdownTimeoutSec  uint64 `env:"SHUTDOWN_TIMEOUT_SEC"`
+	LibratoEmailAddress string `env:"LIBRATO_EMAIL_ADDRESS"`
+	LibratoAPIToken     string `env:"LIBRATO_API_TOKEN"`
+	StathatUserKey      string `env:"STATHAT_USER_KEY"`
 }
 
 // ListenAndServe is the equivalent to http's method.
-func ListenAndServe(appName string, f func() (http.Handler, error)) {
-	_ = listenAndServe(appName, f)
+func ListenAndServe(appName string, handlerProvider func() (http.Handler, error)) {
+	_ = listenAndServe(appName, handlerProvider)
 }
 
-func listenAndServe(appName string, f func() (http.Handler, error)) error {
+func listenAndServe(appName string, handlerProvider func() (http.Handler, error)) error {
+	protolog.RedirectStdLogger()
+	if appName == "" {
+		return handleErrorBeforeStart(ErrRequireAppName)
+	}
+	if handlerProvider == nil {
+		return handleErrorBeforeStart(ErrRequireHandlerProvider)
+	}
 	appEnv := &appEnv{}
 	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: defaultEnv}); err != nil {
 		return handleErrorBeforeStart(err)
@@ -43,7 +63,11 @@ func listenAndServe(appName string, f func() (http.Handler, error)) error {
 	if err := setupLogging(appName, appEnv.LogDir, appEnv.SyslogNetwork, appEnv.SyslogAddress); err != nil {
 		return handleErrorBeforeStart(err)
 	}
-	handler, err := f()
+	registry, err := setupMetrics(appName, appEnv.StathatUserKey, appEnv.LibratoEmailAddress, appEnv.LibratoAPIToken)
+	if err != nil {
+		return handleErrorBeforeStart(err)
+	}
+	handler, err := handlerProvider()
 	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
@@ -51,7 +75,7 @@ func listenAndServe(appName string, f func() (http.Handler, error)) error {
 		Timeout: time.Duration(appEnv.ShutdownTimeoutSec) * time.Second,
 		Server: &http.Server{
 			Addr:    fmt.Sprintf(":%d", appEnv.Port),
-			Handler: newWrapperHandler(handler),
+			Handler: newWrapperHandler(handler, registry),
 		},
 	}
 	protolog.Info(
@@ -118,6 +142,32 @@ func setupLogging(appName string, logDir string, syslogNetwork string, syslogAdd
 		),
 	)
 	return nil
+}
+
+func setupMetrics(appName string, stathatUserKey string, libratoEmailAddress string, libratoAPIToken string) (metrics.Registry, error) {
+	if stathatUserKey == "" && libratoEmailAddress == "" && libratoAPIToken == "" {
+		return nil, nil
+	}
+	registry := metrics.NewPrefixedRegistry(appName)
+	if stathatUserKey != "" {
+		go stathat.Stathat(
+			registry,
+			time.Hour,
+			stathatUserKey,
+		)
+	}
+	if libratoEmailAddress != "" && libratoAPIToken != "" {
+		go librato.Librato(
+			registry,
+			5*time.Minute,
+			libratoEmailAddress,
+			libratoAPIToken,
+			appName,
+			[]float64{0.95},
+			time.Millisecond,
+		)
+	}
+	return registry, nil
 }
 
 func handleErrorBeforeStart(err error) error {

@@ -7,16 +7,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rcrowley/go-metrics"
+
 	"go.pedge.io/proto/time"
 	"go.pedge.io/protolog"
 )
 
 type wrapperHandler struct {
 	http.Handler
+	registry metrics.Registry
 }
 
-func newWrapperHandler(handler http.Handler) *wrapperHandler {
-	return &wrapperHandler{handler}
+func newWrapperHandler(handler http.Handler, registry metrics.Registry) *wrapperHandler {
+	return &wrapperHandler{handler, registry}
 }
 
 func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
@@ -29,7 +32,6 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 			RequestForm:    valuesMap(request.Form),
 			ResponseHeader: valuesMap(wrapperResponseWriter.Header()),
 			StatusCode:     uint32(statusCode(wrapperResponseWriter.statusCode)),
-			Duration:       prototime.DurationToProto(time.Since(start)),
 			Error:          errorString(wrapperResponseWriter.writeError),
 		}
 		if request.URL != nil {
@@ -43,6 +45,7 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 			stack = stack[:runtime.Stack(stack, false)]
 			call.Error = fmt.Sprintf("panic: %v\n%s", recoverErr, string(stack))
 		}
+		call.Duration = prototime.DurationToProto(time.Since(start))
 		protolog.Info(call)
 	}()
 	h.Handler.ServeHTTP(wrapperResponseWriter, request)
