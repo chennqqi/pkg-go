@@ -18,6 +18,9 @@ type Call struct {
 	Path       string                    `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
 	StatusCode uint32                    `protobuf:"varint,2,opt,name=status_code" json:"status_code,omitempty"`
 	Duration   *google_protobuf.Duration `protobuf:"bytes,3,opt,name=duration" json:"duration,omitempty"`
+	WriteError string                    `protobuf:"bytes,4,opt,name=write_error" json:"write_error,omitempty"`
+	PanicError string                    `protobuf:"bytes,5,opt,name=panic_error" json:"panic_error,omitempty"`
+	PanicStack string                    `protobuf:"bytes,6,opt,name=panic_stack" json:"panic_stack,omitempty"`
 }
 
 func (m *Call) Reset()         { *m = Call{} }

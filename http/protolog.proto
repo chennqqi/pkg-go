@@ -8,6 +8,9 @@ message Call {
   string path = 1;
   uint32 status_code = 2;
   google.protobuf.Duration duration = 3;
+  string write_error = 4;
+  string panic_error = 5;
+  string panic_stack = 6;
 }
 
 message ServerCouldNotStart {
