@@ -1,4 +1,8 @@
+/*
+Package pkghttp defines common functionality for http.
+*/
 package pkghttp // import "go.pedge.io/pkg/http"
+
 import (
 	"errors"
 	"fmt"
