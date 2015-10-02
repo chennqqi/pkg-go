@@ -27,12 +27,14 @@ var (
 	// ErrRequireHandlerProvider is the error returned if handlerProvider is not set.
 	ErrRequireHandlerProvider = errors.New("pkghttp: handlerProvider must be set")
 
-	defaultEnv = map[string]string{
+	// DefaultEnv is the map of default environment variable values.
+	DefaultEnv = map[string]string{
 		"SHUTDOWN_TIMEOUT_SEC": "10",
 	}
 )
 
-type appEnv struct {
+// AppEnv is the struct that represents the environment variables used by ListenAndServe.
+type AppEnv struct {
 	Port                uint16 `env:"PORT,required"`
 	LogDir              string `env:"LOG_DIR"`
 	SyslogNetwork       string `env:"SYSLOG_NETWORK"`
@@ -56,8 +58,8 @@ func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http
 	if handlerProvider == nil {
 		return handleErrorBeforeStart(ErrRequireHandlerProvider)
 	}
-	appEnv := &appEnv{}
-	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: defaultEnv}); err != nil {
+	appEnv := &AppEnv{}
+	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: DefaultEnv}); err != nil {
 		return handleErrorBeforeStart(err)
 	}
 	if err := setupLogging(appName, appEnv.LogDir, appEnv.SyslogNetwork, appEnv.SyslogAddress); err != nil {
