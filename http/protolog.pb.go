@@ -18,15 +18,12 @@ type Call struct {
 	Method         string                    `protobuf:"bytes,1,opt,name=method" json:"method,omitempty"`
 	Path           string                    `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
 	Query          map[string]string         `protobuf:"bytes,3,rep,name=query" json:"query,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Fragment       string                    `protobuf:"bytes,4,opt,name=fragment" json:"fragment,omitempty"`
-	RequestHeader  map[string]string         `protobuf:"bytes,5,rep,name=request_header" json:"request_header,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	RequestForm    map[string]string         `protobuf:"bytes,6,rep,name=request_form" json:"request_form,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ResponseHeader map[string]string         `protobuf:"bytes,7,rep,name=response_header" json:"response_header,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	StatusCode     uint32                    `protobuf:"varint,8,opt,name=status_code" json:"status_code,omitempty"`
-	Duration       *google_protobuf.Duration `protobuf:"bytes,9,opt,name=duration" json:"duration,omitempty"`
-	WriteError     string                    `protobuf:"bytes,10,opt,name=write_error" json:"write_error,omitempty"`
-	PanicError     string                    `protobuf:"bytes,11,opt,name=panic_error" json:"panic_error,omitempty"`
-	PanicStack     string                    `protobuf:"bytes,12,opt,name=panic_stack" json:"panic_stack,omitempty"`
+	RequestHeader  map[string]string         `protobuf:"bytes,4,rep,name=request_header" json:"request_header,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RequestForm    map[string]string         `protobuf:"bytes,5,rep,name=request_form" json:"request_form,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ResponseHeader map[string]string         `protobuf:"bytes,6,rep,name=response_header" json:"response_header,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	StatusCode     uint32                    `protobuf:"varint,7,opt,name=status_code" json:"status_code,omitempty"`
+	Duration       *google_protobuf.Duration `protobuf:"bytes,8,opt,name=duration" json:"duration,omitempty"`
+	Error          string                    `protobuf:"bytes,9,opt,name=error" json:"error,omitempty"`
 }
 
 func (m *Call) Reset()         { *m = Call{} }

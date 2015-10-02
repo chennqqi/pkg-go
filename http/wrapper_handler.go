@@ -30,20 +30,18 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 			ResponseHeader: valuesMap(wrapperResponseWriter.Header()),
 			StatusCode:     uint32(statusCode(wrapperResponseWriter.statusCode)),
 			Duration:       prototime.DurationToProto(time.Since(start)),
-			WriteError:     errorString(wrapperResponseWriter.writeError),
+			Error:          errorString(wrapperResponseWriter.writeError),
 		}
 		if request.URL != nil {
 			call.Path = request.URL.Path
 			call.Query = valuesMap(request.URL.Query())
-			call.Fragment = request.URL.Fragment
 		}
 		if recoverErr := recover(); recoverErr != nil {
 			// TODO(pedge): should we write anything at all?
 			responseWriter.WriteHeader(http.StatusInternalServerError)
 			stack := make([]byte, 8192)
 			stack = stack[:runtime.Stack(stack, false)]
-			call.PanicError = fmt.Sprintf("%v", recoverErr)
-			call.PanicStack = string(stack)
+			call.Error = fmt.Sprintf("panic: %v\n%s", recoverErr, string(stack))
 		}
 		protolog.Info(call)
 	}()
