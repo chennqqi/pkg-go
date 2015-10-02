@@ -25,10 +25,11 @@ var (
 
 // AppEnv has the environment variables that must be set.
 type AppEnv struct {
+	Port               uint16 `env:"PORT,required"`
 	LogDir             string `env:"LOG_DIR"`
 	SyslogNetwork      string `env:"SYSLOG_NETWORK"`
 	SyslogAddress      string `env:"SYSLOG_ADDRESS"`
-	ShutdownTimeoutSec int    `env:"SHUTDOWN_TIMEOUT_SEC"`
+	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC"`
 }
 
 // Handler handles HTTP calls.
@@ -38,7 +39,11 @@ type Handler interface {
 }
 
 // ListenAndServe is the equivalent to http's method.
-func ListenAndServe(address string, appName string, f func() (Handler, error)) error {
+func ListenAndServe(appName string, f func() (Handler, error)) {
+	_ = listenAndServe(appName, f)
+}
+
+func listenAndServe(appName string, f func() (Handler, error)) error {
 	appEnv := &AppEnv{}
 	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: DefaultEnv}); err != nil {
 		return handleErrorBeforeStart(err)
@@ -53,7 +58,7 @@ func ListenAndServe(address string, appName string, f func() (Handler, error)) e
 	server := &graceful.Server{
 		Timeout: time.Duration(appEnv.ShutdownTimeoutSec) * time.Second,
 		Server: &http.Server{
-			Addr:    address,
+			Addr:    fmt.Sprintf(":%d", appEnv.Port),
 			Handler: newInternalHandler(handler),
 		},
 	}
