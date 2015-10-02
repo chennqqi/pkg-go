@@ -7,19 +7,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rcrowley/go-metrics"
-
 	"go.pedge.io/proto/time"
 	"go.pedge.io/protolog"
 )
 
 type wrapperHandler struct {
 	http.Handler
-	registry metrics.Registry
 }
 
-func newWrapperHandler(handler http.Handler, registry metrics.Registry) *wrapperHandler {
-	return &wrapperHandler{handler, registry}
+func newWrapperHandler(handler http.Handler) *wrapperHandler {
+	return &wrapperHandler{handler}
 }
 
 func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {

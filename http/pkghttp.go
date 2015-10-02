@@ -43,12 +43,12 @@ type appEnv struct {
 	StathatUserKey      string `env:"STATHAT_USER_KEY"`
 }
 
-// ListenAndServe is the equivalent to http's method.
-func ListenAndServe(appName string, handlerProvider func() (http.Handler, error)) {
+// ListenAndServe is the equivalent to http's method. Note that the metrics.Registry instance may be nil.
+func ListenAndServe(appName string, handlerProvider func(metrics.Registry) (http.Handler, error)) {
 	_ = listenAndServe(appName, handlerProvider)
 }
 
-func listenAndServe(appName string, handlerProvider func() (http.Handler, error)) error {
+func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http.Handler, error)) error {
 	protolog.RedirectStdLogger()
 	if appName == "" {
 		return handleErrorBeforeStart(ErrRequireAppName)
@@ -67,7 +67,7 @@ func listenAndServe(appName string, handlerProvider func() (http.Handler, error)
 	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
-	handler, err := handlerProvider()
+	handler, err := handlerProvider(registry)
 	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
@@ -75,7 +75,7 @@ func listenAndServe(appName string, handlerProvider func() (http.Handler, error)
 		Timeout: time.Duration(appEnv.ShutdownTimeoutSec) * time.Second,
 		Server: &http.Server{
 			Addr:    fmt.Sprintf(":%d", appEnv.Port),
-			Handler: newWrapperHandler(handler, registry),
+			Handler: newWrapperHandler(handler),
 		},
 	}
 	protolog.Info(
