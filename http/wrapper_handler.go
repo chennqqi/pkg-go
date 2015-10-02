@@ -3,8 +3,8 @@ package pkghttp
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"runtime"
+	"strings"
 	"time"
 
 	"go.pedge.io/proto/time"
@@ -25,13 +25,17 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 	defer func() {
 		call := &Call{
 			Method:         request.Method,
-			Path:           request.URL.Path,
-			RequestHeader:  headerMap(request.Header),
+			RequestHeader:  valuesMap(request.Header),
 			RequestForm:    valuesMap(request.Form),
-			ResponseHeader: headerMap(wrapperResponseWriter.Header()),
+			ResponseHeader: valuesMap(wrapperResponseWriter.Header()),
 			StatusCode:     uint32(statusCode(wrapperResponseWriter.statusCode)),
 			Duration:       prototime.DurationToProto(time.Since(start)),
 			WriteError:     errorString(wrapperResponseWriter.writeError),
+		}
+		if request.URL != nil {
+			call.Path = request.URL.Path
+			call.Query = valuesMap(request.URL.Query())
+			call.Fragment = request.URL.Fragment
 		}
 		if recoverErr := recover(); recoverErr != nil {
 			// TODO(pedge): should we write anything at all?
@@ -46,28 +50,13 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 	h.Handler.ServeHTTP(wrapperResponseWriter, request)
 }
 
-// TODO(pedge): losing repeated fields, but seems cleaner for logging
-// should we do repeated fields?
-func headerMap(header http.Header) map[string]string {
-	if header == nil {
-		return nil
-	}
-	m := make(map[string]string)
-	for key := range header {
-		m[key] = header.Get(key)
-	}
-	return m
-}
-
-// TODO(pedge): losing repeated fields, but seems cleaner for logging
-// should we do repeated fields?
-func valuesMap(values url.Values) map[string]string {
+func valuesMap(values map[string][]string) map[string]string {
 	if values == nil {
 		return nil
 	}
 	m := make(map[string]string)
-	for key := range values {
-		m[key] = values.Get(key)
+	for key, value := range values {
+		m[key] = strings.Join(value, " ")
 	}
 	return m
 }
