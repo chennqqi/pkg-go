@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+
+package pkghttp;
+
+message Call {
+  string path = 1;
+  uint32 status_code = 2;
+  google.protobuf.Duration duration = 3;
+}
+
+message ServerCouldNotStart {
+  string error = 1;
+}
+
+message ServerStarting {
+}
+
+message ServerFinished {
+  string error = 1;
+  google.protobuf.Duration duration = 2;
+}
