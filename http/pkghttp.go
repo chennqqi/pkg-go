@@ -35,17 +35,43 @@ var (
 
 // AppEnv is the struct that represents the environment variables used by ListenAndServe.
 type AppEnv struct {
-	Port                uint16 `env:"PORT,required"`
-	LogDir              string `env:"LOG_DIR"`
-	SyslogNetwork       string `env:"SYSLOG_NETWORK"`
-	SyslogAddress       string `env:"SYSLOG_ADDRESS"`
-	ShutdownTimeoutSec  uint64 `env:"SHUTDOWN_TIMEOUT_SEC"`
+	// The port to serve on.
+	// Required.
+	Port uint16 `env:"PORT,required"`
+	// The directory to write rotating logs to.
+	// If not set and SyslogNetwork and SyslogAddress not set, logs will be to stderr.
+	LogDir string `env:"LOG_DIR"`
+	// The syslog network, either udp or tcp.
+	// Must be set with SyslogAddress.
+	// If not set and LogDir not set, logs will be to stderr.
+	SyslogNetwork string `env:"SYSLOG_NETWORK"`
+	// The syslog host:port.
+	// Must be set with SyslogNetwork.
+	// If not set and LogDir not set, logs will be to stderr.
+	SyslogAddress string `env:"SYSLOG_ADDRESS"`
+	// The time in seconds to shutdown after a SIGINT or SIGTERM.
+	// Default value is 10.
+	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC"`
+	// The email address for the Librato account to send stats to.
+	// Must be set with LibratoAPIToken.
+	// If not set and StathatUserKey not set, no metrics.Registry for stats will be created.
 	LibratoEmailAddress string `env:"LIBRATO_EMAIL_ADDRESS"`
-	LibratoAPIToken     string `env:"LIBRATO_API_TOKEN"`
-	StathatUserKey      string `env:"STATHAT_USER_KEY"`
+	// The API Token for the Librato account to send stats to.
+	// Must be set with LibratoEmailAddress.
+	// If not set and StathatUserKey not set, no metrics.Registry for stats will be created.
+	LibratoAPIToken string `env:"LIBRATO_API_TOKEN"`
+	// The StatHat user key to send stats to.
+	// If not set and LibratoEmailAddress and LibratoAPIToken not set, no metrics.Registry for stats will be created.
+	StathatUserKey string `env:"STATHAT_USER_KEY"`
 }
 
-// ListenAndServe is the equivalent to http's method. Note that the metrics.Registry instance may be nil.
+// ListenAndServe is the equivalent to http's method.
+//
+// Sets up logging and metrics per the environment variables, intercepts requests and responses, handles SIGINT and SIGTERM.
+// When this returns, any errors will have been logged.
+// If the server starts, this will block until the server stops.
+//
+// Note that the metrics.Registry instance may be nil.
 func ListenAndServe(appName string, handlerProvider func(metrics.Registry) (http.Handler, error)) {
 	_ = listenAndServe(appName, handlerProvider)
 }
