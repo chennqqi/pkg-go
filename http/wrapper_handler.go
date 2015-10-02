@@ -3,6 +3,7 @@ package pkghttp
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"runtime"
 	"time"
 
@@ -23,14 +24,18 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 	wrapperResponseWriter := newWrapperResponseWriter(responseWriter)
 	defer func() {
 		call := &Call{
+			Method:         request.Method,
 			Path:           request.URL.Path,
 			RequestHeader:  headerMap(request.Header),
+			RequestForm:    valuesMap(request.Form),
 			ResponseHeader: headerMap(wrapperResponseWriter.Header()),
-			StatusCode:     uint32(wrapperResponseWriter.statusCode),
+			StatusCode:     uint32(statusCode(wrapperResponseWriter.statusCode)),
 			Duration:       prototime.DurationToProto(time.Since(start)),
 			WriteError:     errorString(wrapperResponseWriter.writeError),
 		}
 		if recoverErr := recover(); recoverErr != nil {
+			// TODO(pedge): should we write anything at all?
+			responseWriter.WriteHeader(http.StatusInternalServerError)
 			stack := make([]byte, 8192)
 			stack = stack[:runtime.Stack(stack, false)]
 			call.PanicError = fmt.Sprintf("%v", recoverErr)
@@ -52,6 +57,26 @@ func headerMap(header http.Header) map[string]string {
 		m[key] = header.Get(key)
 	}
 	return m
+}
+
+// TODO(pedge): losing repeated fields, but seems cleaner for logging
+// should we do repeated fields?
+func valuesMap(values url.Values) map[string]string {
+	if values == nil {
+		return nil
+	}
+	m := make(map[string]string)
+	for key := range values {
+		m[key] = values.Get(key)
+	}
+	return m
+}
+
+func statusCode(code int) int {
+	if code == 0 {
+		return http.StatusOK
+	}
+	return code
 }
 
 func errorString(err error) string {
