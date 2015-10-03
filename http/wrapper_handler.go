@@ -13,10 +13,11 @@ import (
 
 type wrapperHandler struct {
 	http.Handler
+	healthCheckPath string
 }
 
-func newWrapperHandler(handler http.Handler) *wrapperHandler {
-	return &wrapperHandler{handler}
+func newWrapperHandler(handler http.Handler, healthCheckPath string) *wrapperHandler {
+	return &wrapperHandler{handler, healthCheckPath}
 }
 
 func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
@@ -45,6 +46,10 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 		call.Duration = prototime.DurationToProto(time.Since(start))
 		protolog.Info(call)
 	}()
+	if request.URL != nil && request.URL.Path == h.healthCheckPath {
+		wrapperResponseWriter.WriteHeader(http.StatusOK)
+		return
+	}
 	h.Handler.ServeHTTP(wrapperResponseWriter, request)
 }
 

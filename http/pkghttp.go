@@ -34,6 +34,7 @@ var (
 	// DefaultEnv is the map of default environment variable values.
 	DefaultEnv = map[string]string{
 		"SHUTDOWN_TIMEOUT_SEC": "10",
+		"HEALTH_CHECK_PATH":    "/health",
 	}
 )
 
@@ -42,6 +43,10 @@ type AppEnv struct {
 	// The port to serve on.
 	// Required.
 	Port uint16 `env:"PORT,required"`
+	// HealthCheckPath is the path for healt checking.
+	// This path will always return 200 for a GET.
+	// Default value is /health.
+	HealthCheckPath string `env:"HEALTH_CHECK_PATH"`
 	// The directory to write rotating logs to.
 	// If not set and SyslogNetwork and SyslogAddress not set, logs will be to stderr.
 	LogDir string `env:"LOG_DIR"`
@@ -107,7 +112,7 @@ func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http
 		Timeout: time.Duration(appEnv.ShutdownTimeoutSec) * time.Second,
 		Server: &http.Server{
 			Addr:    fmt.Sprintf(":%d", appEnv.Port),
-			Handler: newWrapperHandler(handler),
+			Handler: newWrapperHandler(handler, appEnv.HealthCheckPath),
 		},
 	}
 	protolog.Info(
