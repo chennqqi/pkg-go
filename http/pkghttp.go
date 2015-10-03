@@ -47,6 +47,8 @@ type AppEnv struct {
 	// This path will always return 200 for a GET.
 	// Default value is /health.
 	HealthCheckPath string `env:"HEALTH_CHECK_PATH"`
+	// DisableStderrLog says to disable logging to stderr.
+	DisableStderrLog bool `env:"DISABLE_STDERR_LOG"`
 	// The directory to write rotating logs to.
 	// If not set and SyslogNetwork and SyslogAddress not set, logs will be to stderr.
 	LogDir string `env:"LOG_DIR"`
@@ -97,7 +99,7 @@ func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http
 	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: DefaultEnv}); err != nil {
 		return handleErrorBeforeStart(err)
 	}
-	if err := setupLogging(appName, appEnv.LogDir, appEnv.SyslogNetwork, appEnv.SyslogAddress); err != nil {
+	if err := setupLogging(appName, appEnv.DisableStderrLog, appEnv.LogDir, appEnv.SyslogNetwork, appEnv.SyslogAddress); err != nil {
 		return handleErrorBeforeStart(err)
 	}
 	registry, err := setupMetrics(appName, appEnv.StathatUserKey, appEnv.LibratoEmailAddress, appEnv.LibratoAPIToken)
@@ -132,13 +134,17 @@ func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http
 	return nil
 }
 
-func setupLogging(appName string, logDir string, syslogNetwork string, syslogAddress string) error {
-	pushers := []protolog.Pusher{
-		protolog.NewStandardWritePusher(
-			protolog.NewFileFlusher(
-				os.Stderr,
+func setupLogging(appName string, disableStderrLog bool, logDir string, syslogNetwork string, syslogAddress string) error {
+	var pushers []protolog.Pusher
+	if !disableStderrLog {
+		pushers = append(
+			pushers,
+			protolog.NewStandardWritePusher(
+				protolog.NewFileFlusher(
+					os.Stderr,
+				),
 			),
-		),
+		)
 	}
 	if logDir != "" {
 		pushers = append(
@@ -171,13 +177,19 @@ func setupLogging(appName string, logDir string, syslogNetwork string, syslogAdd
 			),
 		)
 	}
-	protolog.SetLogger(
-		protolog.NewStandardLogger(
-			protolog.NewMultiPusher(
-				pushers...,
+	if len(pushers) > 0 {
+		protolog.SetLogger(
+			protolog.NewStandardLogger(
+				protolog.NewMultiPusher(
+					pushers...,
+				),
 			),
-		),
-	)
+		)
+	} else {
+		protolog.SetLogger(
+			protolog.DiscardLogger,
+		)
+	}
 	return nil
 }
 
