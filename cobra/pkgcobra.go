@@ -13,13 +13,13 @@ type Bounds struct {
 	Max int
 }
 
-// CobraRunFixedArgs makes a new cobra run function that checks that the number of args is equal to numArgs.
-func CobraRunFixedArgs(numArgs int, run func(args []string) error) func(*cobra.Command, []string) {
-	return CobraRunBoundedArgs(Bounds{Min: numArgs, Max: numArgs}, run)
+// RunFixedArgs makes a new cobra run function that checks that the number of args is equal to numArgs.
+func RunFixedArgs(numArgs int, run func(args []string) error) func(*cobra.Command, []string) {
+	return RunBoundedArgs(Bounds{Min: numArgs, Max: numArgs}, run)
 }
 
-// CobraRunBoundedArgs makes a new cobra run function that checks that the number of args is within argBounds.
-func CobraRunBoundedArgs(argBounds Bounds, run func(args []string) error) func(*cobra.Command, []string) {
+// RunBoundedArgs makes a new cobra run function that checks that the number of args is within argBounds.
+func RunBoundedArgs(argBounds Bounds, run func(args []string) error) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
 		if argBounds.Max == 0 && len(args) < argBounds.Min {
 			errorAndExit("Expected at least %d args, got %d", argBounds.Min, len(args))
