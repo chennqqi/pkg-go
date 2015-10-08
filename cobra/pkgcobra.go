@@ -21,7 +21,9 @@ func RunFixedArgs(numArgs int, run func(args []string) error) func(*cobra.Comman
 // RunBoundedArgs makes a new cobra run function that checks that the number of args is within argBounds.
 func RunBoundedArgs(argBounds Bounds, run func(args []string) error) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
-		if argBounds.Max == 0 && len(args) < argBounds.Min {
+		if argBounds.Min == 0 && argBounds.Max == 0 && len(args) != 0 {
+			errorAndExit("Expected no args, got %d", len(args))
+		} else if argBounds.Max == 0 && len(args) < argBounds.Min {
 			errorAndExit("Expected at least %d args, got %d", argBounds.Min, len(args))
 		} else if argBounds.Min == 0 && len(args) > argBounds.Max {
 			errorAndExit("Expected at most %d args, got %d", argBounds.Max, len(args))
