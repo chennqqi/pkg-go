@@ -5,6 +5,7 @@ import (
 	"log/syslog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"go.pedge.io/protolog"
 	protosyslog "go.pedge.io/protolog/syslog"
@@ -26,6 +27,8 @@ type Env struct {
 	// Must be set with SyslogNetwork.
 	// If not set and LogDir not set, logs will be to stderr.
 	SyslogAddress string `env:"SYSLOG_ADDRESS"`
+	// The level to log at, must be one of DEBUG, INFO, WARN, ERROR, FATAL, PANIC.
+	LogLevel string `env:"LOG_LEVEL"`
 }
 
 // SetupLogging sets up logging.
@@ -86,5 +89,12 @@ func SetupLogging(appName string, env Env) error {
 		)
 	}
 	protolog.RedirectStdLogger()
+	if env.LogLevel != "" {
+		levelValue, ok := protolog.Level_value[fmt.Sprintf("LEVEL_%s", strings.ToUpper(env.LogLevel))]
+		if !ok {
+			return fmt.Errorf("pkglog: unknown log level: %s", env.LogLevel)
+		}
+		protolog.SetLevel(protolog.Level(levelValue))
+	}
 	return nil
 }
