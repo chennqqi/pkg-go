@@ -1,27 +1,34 @@
 syntax = "proto3";
 
+import "go.pedge.io/protolog/protolog.proto";
+
 package pkggraph;
 
 message NodeWaiting {
+  option (protolog.event) = true;
   string node = 1;
   string parent_node = 2;
 }
 
 message NodeFinishedWaiting {
+  option (protolog.event) = true;
   string node = 1;
   string parent_error = 2;
 }
 
 message NodeStarting {
+  option (protolog.event) = true;
   string node = 1;
 }
 
 message NodeFinished {
+  option (protolog.event) = true;
   string node = 1;
   string error = 2;
 }
 
 message NodeSending {
+  option (protolog.event) = true;
   string node = 1;
   string child_node = 2;
   string error = 3;
