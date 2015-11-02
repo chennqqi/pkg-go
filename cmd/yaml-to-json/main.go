@@ -1,8 +1,6 @@
 /*
 Package main implements the yaml2json command-line tool, which takes
 a YAML file as stdin, and outputs a JSON file to stdout.
-
-See the README at https://github.com/peter-edge/go-yaml2json/blob/master/README.md for more details.
 */
 package main
 
