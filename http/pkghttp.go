@@ -25,12 +25,6 @@ var (
 	ErrRequireAppName = errors.New("pkghttp: appName must be set")
 	// ErrRequireHandlerProvider is the error returned if handlerProvider is not set.
 	ErrRequireHandlerProvider = errors.New("pkghttp: handlerProvider must be set")
-
-	// DefaultEnv is the map of default environment variable values.
-	DefaultEnv = map[string]string{
-		"SHUTDOWN_TIMEOUT_SEC": "10",
-		"HEALTH_CHECK_PATH":    "/health",
-	}
 )
 
 // AppEnv is the struct that represents the environment variables used by ListenAndServe.
@@ -41,10 +35,10 @@ type AppEnv struct {
 	// HealthCheckPath is the path for healt checking.
 	// This path will always return 200 for a GET.
 	// Default value is /health.
-	HealthCheckPath string `env:"HEALTH_CHECK_PATH"`
+	HealthCheckPath string `env:"HEALTH_CHECK_PATH,default=/health"`
 	// The time in seconds to shutdown after a SIGINT or SIGTERM.
 	// Default value is 10.
-	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC"`
+	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC,default=10"`
 	// See pkglog for the log environment variables.
 	LogEnv pkglog.Env
 	// See pkgmetrics for the metrics environment variables.
@@ -70,7 +64,7 @@ func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http
 		return handleErrorBeforeStart(ErrRequireHandlerProvider)
 	}
 	appEnv := &AppEnv{}
-	if err := env.Populate(appEnv, env.PopulateOptions{Defaults: DefaultEnv}); err != nil {
+	if err := env.Populate(appEnv); err != nil {
 		return handleErrorBeforeStart(err)
 	}
 	if err := pkglog.SetupLogging(appName, appEnv.LogEnv); err != nil {
