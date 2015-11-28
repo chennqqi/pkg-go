@@ -8,8 +8,6 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
-// discarding unused import protolog "go.pedge.io/protolog"
-
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
@@ -20,35 +18,39 @@ type NodeWaiting struct {
 	ParentNode string `protobuf:"bytes,2,opt,name=parent_node" json:"parent_node,omitempty"`
 }
 
-func (m *NodeWaiting) Reset()         { *m = NodeWaiting{} }
-func (m *NodeWaiting) String() string { return proto.CompactTextString(m) }
-func (*NodeWaiting) ProtoMessage()    {}
+func (m *NodeWaiting) Reset()                    { *m = NodeWaiting{} }
+func (m *NodeWaiting) String() string            { return proto.CompactTextString(m) }
+func (*NodeWaiting) ProtoMessage()               {}
+func (*NodeWaiting) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type NodeFinishedWaiting struct {
 	Node        string `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
 	ParentError string `protobuf:"bytes,2,opt,name=parent_error" json:"parent_error,omitempty"`
 }
 
-func (m *NodeFinishedWaiting) Reset()         { *m = NodeFinishedWaiting{} }
-func (m *NodeFinishedWaiting) String() string { return proto.CompactTextString(m) }
-func (*NodeFinishedWaiting) ProtoMessage()    {}
+func (m *NodeFinishedWaiting) Reset()                    { *m = NodeFinishedWaiting{} }
+func (m *NodeFinishedWaiting) String() string            { return proto.CompactTextString(m) }
+func (*NodeFinishedWaiting) ProtoMessage()               {}
+func (*NodeFinishedWaiting) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 type NodeStarting struct {
 	Node string `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
 }
 
-func (m *NodeStarting) Reset()         { *m = NodeStarting{} }
-func (m *NodeStarting) String() string { return proto.CompactTextString(m) }
-func (*NodeStarting) ProtoMessage()    {}
+func (m *NodeStarting) Reset()                    { *m = NodeStarting{} }
+func (m *NodeStarting) String() string            { return proto.CompactTextString(m) }
+func (*NodeStarting) ProtoMessage()               {}
+func (*NodeStarting) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 type NodeFinished struct {
 	Node  string `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
 	Error string `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
 }
 
-func (m *NodeFinished) Reset()         { *m = NodeFinished{} }
-func (m *NodeFinished) String() string { return proto.CompactTextString(m) }
-func (*NodeFinished) ProtoMessage()    {}
+func (m *NodeFinished) Reset()                    { *m = NodeFinished{} }
+func (m *NodeFinished) String() string            { return proto.CompactTextString(m) }
+func (*NodeFinished) ProtoMessage()               {}
+func (*NodeFinished) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
 type NodeSending struct {
 	Node      string `protobuf:"bytes,1,opt,name=node" json:"node,omitempty"`
@@ -56,6 +58,30 @@ type NodeSending struct {
 	Error     string `protobuf:"bytes,3,opt,name=error" json:"error,omitempty"`
 }
 
-func (m *NodeSending) Reset()         { *m = NodeSending{} }
-func (m *NodeSending) String() string { return proto.CompactTextString(m) }
-func (*NodeSending) ProtoMessage()    {}
+func (m *NodeSending) Reset()                    { *m = NodeSending{} }
+func (m *NodeSending) String() string            { return proto.CompactTextString(m) }
+func (*NodeSending) ProtoMessage()               {}
+func (*NodeSending) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func init() {
+	proto.RegisterType((*NodeWaiting)(nil), "pkggraph.NodeWaiting")
+	proto.RegisterType((*NodeFinishedWaiting)(nil), "pkggraph.NodeFinishedWaiting")
+	proto.RegisterType((*NodeStarting)(nil), "pkggraph.NodeStarting")
+	proto.RegisterType((*NodeFinished)(nil), "pkggraph.NodeFinished")
+	proto.RegisterType((*NodeSending)(nil), "pkggraph.NodeSending")
+}
+
+var fileDescriptor0 = []byte{
+	// 173 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x12, 0x49, 0x2f, 0x4a, 0x2c,
+	0xc8, 0xd0, 0x2f, 0xc8, 0x4e, 0x07, 0x33, 0xf4, 0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0x38, 0x60,
+	0x7c, 0x25, 0x03, 0x2e, 0x6e, 0xbf, 0xfc, 0x94, 0xd4, 0xf0, 0xc4, 0xcc, 0x92, 0xcc, 0xbc, 0x74,
+	0x21, 0x1e, 0x2e, 0x96, 0x3c, 0x20, 0x57, 0x82, 0x51, 0x81, 0x51, 0x83, 0x53, 0x48, 0x98, 0x8b,
+	0xbb, 0x20, 0xb1, 0x28, 0x35, 0xaf, 0x24, 0x1e, 0x2c, 0xc8, 0x04, 0x12, 0x54, 0xb2, 0xe4, 0x12,
+	0x06, 0xe9, 0x70, 0xcb, 0xcc, 0xcb, 0x2c, 0xce, 0x48, 0x4d, 0xc1, 0xae, 0x53, 0x84, 0x8b, 0x07,
+	0xaa, 0x33, 0xb5, 0xa8, 0x28, 0xbf, 0x08, 0xaa, 0x55, 0x86, 0x8b, 0x07, 0xa4, 0x35, 0xb8, 0x24,
+	0xb1, 0x08, 0x53, 0x8f, 0x92, 0x36, 0x44, 0x16, 0x66, 0x30, 0x9a, 0x89, 0xbc, 0x5c, 0xac, 0xc8,
+	0x46, 0xd9, 0x41, 0xdc, 0x1d, 0x9c, 0x9a, 0x97, 0x82, 0x69, 0xbb, 0x10, 0x17, 0x57, 0x72, 0x46,
+	0x66, 0x4e, 0x0a, 0x92, 0xb3, 0x11, 0xfa, 0x99, 0x41, 0xdc, 0x24, 0x36, 0x70, 0x40, 0x18, 0x03,
+	0x02, 0x00, 0x00, 0xff, 0xff, 0x31, 0xf1, 0x8a, 0x65, 0x20, 0x01, 0x00, 0x00,
+}

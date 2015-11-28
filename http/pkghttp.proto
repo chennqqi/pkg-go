@@ -1,12 +1,10 @@
 syntax = "proto3";
 
 import "google/protobuf/duration.proto";
-import "go.pedge.io/protolog/protolog.proto";
 
 package pkghttp;
 
 message Call {
-  option (protolog.event) = true;
   string method = 1;
   string path = 2;
   map<string, string> query = 3;
@@ -19,16 +17,12 @@ message Call {
 }
 
 message ServerCouldNotStart {
-  option (protolog.event) = true;
   string error = 1;
 }
 
-message ServerStarting {
-  option (protolog.event) = true;
-}
+message ServerStarting {}
 
 message ServerFinished {
-  option (protolog.event) = true;
   string error = 1;
   google.protobuf.Duration duration = 2;
 }
