@@ -37,6 +37,13 @@ func RunBoundedArgs(argBounds Bounds, run func(args []string) error) func(*cobra
 	}
 }
 
+// Run makes a new cobra run function that wraps the given function.
+func Run(run func(args []string) error) func(*cobra.Command, []string) {
+	return func(_ *cobra.Command, args []string) {
+		check(run(args))
+	}
+}
+
 func check(err error) {
 	if err != nil {
 		errorAndExit(err.Error())

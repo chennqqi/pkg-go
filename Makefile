@@ -15,6 +15,9 @@ updatetestdeps:
 build: deps
 	go build ./...
 
+install: deps
+	go install ./...
+
 lint: testdeps
 	go get -v github.com/golang/lint/golint
 	for file in $$(find . -name '*.go' | grep -v '\.pb\.go' | grep -v '\.pb\.gw\.go' | grep -v '\.pb\.log\.go'); do \
