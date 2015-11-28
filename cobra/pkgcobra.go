@@ -21,33 +21,7 @@ func RunFixedArgs(numArgs int, run func(args []string) error) func(*cobra.Comman
 // RunBoundedArgs makes a new cobra run function that checks that the number of args is within argBounds.
 func RunBoundedArgs(argBounds Bounds, run func(args []string) error) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
-		if argBounds.Min == 0 && argBounds.Max == 0 {
-			if len(args) != 0 {
-				errorAndExit("Expected no args, got %d", len(args))
-			}
-			check(run(args))
-			return
-		}
-		if argBounds.Max == 0 {
-			if len(args) < argBounds.Min {
-				errorAndExit("Expected at least %d args, got %d", argBounds.Min, len(args))
-			}
-			check(run(args))
-			return
-		}
-		if argBounds.Min == 0 {
-			if len(args) > argBounds.Max {
-				errorAndExit("Expected at most %d args, got %d", argBounds.Max, len(args))
-			}
-			check(run(args))
-			return
-		}
-		if len(args) < argBounds.Min || len(args) > argBounds.Max {
-			if argBounds.Min == argBounds.Max {
-				errorAndExit("Expected %d args, got %d", argBounds.Min, len(args))
-			}
-			errorAndExit("Expected between %d and %d args, got %d", argBounds.Min, argBounds.Max, len(args))
-		}
+		check(CheckBoundedArgs(argBounds, args))
 		check(run(args))
 	}
 }
@@ -57,6 +31,40 @@ func Run(run func(args []string) error) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
 		check(run(args))
 	}
+}
+
+// CheckFixedArgs checks that the number of arguments equals numArgs.
+func CheckFixedArgs(numArgs int, args []string) error {
+	return CheckBoundedArgs(Bounds{Min: numArgs, Max: numArgs}, args)
+}
+
+// CheckBoundedArgs checks that the number of arguments is within the given Bounds.
+func CheckBoundedArgs(argBounds Bounds, args []string) error {
+	if argBounds.Min == 0 && argBounds.Max == 0 {
+		if len(args) != 0 {
+			return fmt.Errorf("Expected no args, got %d", len(args))
+		}
+		return nil
+	}
+	if argBounds.Max == 0 {
+		if len(args) < argBounds.Min {
+			return fmt.Errorf("Expected at least %d args, got %d", argBounds.Min, len(args))
+		}
+		return nil
+	}
+	if argBounds.Min == 0 {
+		if len(args) > argBounds.Max {
+			return fmt.Errorf("Expected at most %d args, got %d", argBounds.Max, len(args))
+		}
+		return nil
+	}
+	if len(args) < argBounds.Min || len(args) > argBounds.Max {
+		if argBounds.Min == argBounds.Max {
+			return fmt.Errorf("Expected %d args, got %d", argBounds.Min, len(args))
+		}
+		return fmt.Errorf("Expected between %d and %d args, got %d", argBounds.Min, argBounds.Max, len(args))
+	}
+	return nil
 }
 
 func check(err error) {
