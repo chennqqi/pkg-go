@@ -21,15 +21,15 @@ func RunFixedArgs(numArgs int, run func(args []string) error) func(*cobra.Comman
 // RunBoundedArgs makes a new cobra run function that checks that the number of args is within argBounds.
 func RunBoundedArgs(argBounds Bounds, run func(args []string) error) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
-		check(CheckBoundedArgs(argBounds, args))
-		check(run(args))
+		Check(CheckBoundedArgs(argBounds, args))
+		Check(run(args))
 	}
 }
 
 // Run makes a new cobra run function that wraps the given function.
 func Run(run func(args []string) error) func(*cobra.Command, []string) {
 	return func(_ *cobra.Command, args []string) {
-		check(run(args))
+		Check(run(args))
 	}
 }
 
@@ -67,13 +67,15 @@ func CheckBoundedArgs(argBounds Bounds, args []string) error {
 	return nil
 }
 
-func check(err error) {
+// Check checks the error.
+func Check(err error) {
 	if err != nil {
-		errorAndExit(err.Error())
+		ErrorAndExit(err.Error())
 	}
 }
 
-func errorAndExit(format string, args ...interface{}) {
+// ErrorAndExit errors with the given format and args, and then exits.
+func ErrorAndExit(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, "%s\n", fmt.Sprintf(format, args...))
 	os.Exit(1)
 }
