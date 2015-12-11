@@ -71,7 +71,9 @@ func SetupLogging(appName string, env Env) error {
 			pushers,
 			protosyslog.NewPusher(
 				writer,
-				protosyslog.PusherOptions{},
+				protosyslog.PusherOptions{
+					Marshaller: protolog.DefaultTextMarshaller,
+				},
 			),
 		)
 	}
