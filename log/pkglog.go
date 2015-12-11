@@ -37,7 +37,7 @@ func SetupLogging(appName string, env Env) error {
 	if !env.DisableStderrLog {
 		pushers = append(
 			pushers,
-			protolog.NewStandardWritePusher(
+			protolog.NewDefaultTextWritePusher(
 				protolog.NewFileFlusher(
 					os.Stderr,
 				),
@@ -47,7 +47,7 @@ func SetupLogging(appName string, env Env) error {
 	if env.LogDir != "" {
 		pushers = append(
 			pushers,
-			protolog.NewStandardWritePusher(
+			protolog.NewDefaultTextWritePusher(
 				protolog.NewWriterFlusher(
 					&lumberjack.Logger{
 						Filename:   filepath.Join(env.LogDir, fmt.Sprintf("%s.log", appName)),
@@ -69,20 +69,18 @@ func SetupLogging(appName string, env Env) error {
 		}
 		pushers = append(
 			pushers,
-			protosyslog.NewPusher(
+			protosyslog.NewDefaultTextPusher(
 				writer,
-				protosyslog.PusherOptions{
-					Marshaller: protolog.DefaultTextMarshaller,
-				},
 			),
 		)
 	}
 	if len(pushers) > 0 {
 		protolog.SetLogger(
-			protolog.NewStandardLogger(
+			protolog.NewLogger(
 				protolog.NewMultiPusher(
 					pushers...,
 				),
+				protolog.LoggerOptions{},
 			),
 		)
 	} else {
