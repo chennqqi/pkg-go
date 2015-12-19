@@ -13,45 +13,45 @@ import (
 func TestBuild(t *testing.T) {
 	intC := make(chan int, 8)
 	nameToNodeInfo := map[string]*NodeInfo{
-		"1": &NodeInfo{
+		"1": {
 			Parents: []string{},
 		},
-		"2": &NodeInfo{
+		"2": {
 			Parents: []string{},
 		},
-		"3-1": &NodeInfo{
+		"3-1": {
 			Parents: []string{
 				"1",
 				"2",
 			},
 		},
-		"3-2": &NodeInfo{
+		"3-2": {
 			Parents: []string{
 				"1",
 				"2",
 			},
 		},
-		"3-3": &NodeInfo{
+		"3-3": {
 			Parents: []string{
 				"1",
 				"2",
 			},
 		},
-		"4-1": &NodeInfo{
+		"4-1": {
 			Parents: []string{
 				"3-1",
 				"3-2",
 				"3-3",
 			},
 		},
-		"4-2": &NodeInfo{
+		"4-2": {
 			Parents: []string{
 				"3-1",
 				"3-2",
 				"3-3",
 			},
 		},
-		"5": &NodeInfo{
+		"5": {
 			Parents: []string{
 				"4-1",
 				"4-2",
@@ -97,45 +97,45 @@ func TestBuild(t *testing.T) {
 func TestBuildWithError(t *testing.T) {
 	intC := make(chan int, 5)
 	nameToNodeInfo := map[string]*NodeInfo{
-		"1": &NodeInfo{
+		"1": {
 			Parents: []string{},
 		},
-		"2": &NodeInfo{
+		"2": {
 			Parents: []string{},
 		},
-		"3-1": &NodeInfo{
+		"3-1": {
 			Parents: []string{
 				"1",
 				"2",
 			},
 		},
-		"3-2": &NodeInfo{
+		"3-2": {
 			Parents: []string{
 				"1",
 				"2",
 			},
 		},
-		"3-3": &NodeInfo{
+		"3-3": {
 			Parents: []string{
 				"1",
 				"2",
 			},
 		},
-		"4-1": &NodeInfo{
+		"4-1": {
 			Parents: []string{
 				"3-1",
 				"3-2",
 				"3-3",
 			},
 		},
-		"4-2": &NodeInfo{
+		"4-2": {
 			Parents: []string{
 				"3-1",
 				"3-2",
 				"3-3",
 			},
 		},
-		"5": &NodeInfo{
+		"5": {
 			Parents: []string{
 				"4-1",
 				"4-2",
