@@ -37,23 +37,25 @@ func SetupLogging(appName string, env Env) error {
 	if !env.DisableStderrLog {
 		pushers = append(
 			pushers,
-			protolog.NewDefaultTextWritePusher(
+			protolog.NewTextWritePusher(
 				protolog.NewFileFlusher(
 					os.Stderr,
 				),
+				protolog.MarshallerOptions{},
 			),
 		)
 	}
 	if env.LogDir != "" {
 		pushers = append(
 			pushers,
-			protolog.NewDefaultTextWritePusher(
+			protolog.NewTextWritePusher(
 				protolog.NewWriterFlusher(
 					&lumberjack.Logger{
 						Filename:   filepath.Join(env.LogDir, fmt.Sprintf("%s.log", appName)),
 						MaxBackups: 3,
 					},
 				),
+				protolog.MarshallerOptions{},
 			),
 		)
 	}
