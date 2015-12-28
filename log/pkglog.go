@@ -69,8 +69,9 @@ func SetupLogging(appName string, env Env) error {
 		}
 		pushers = append(
 			pushers,
-			protolog_syslog.NewDefaultTextPusher(
+			protolog_syslog.NewPusher(
 				writer,
+				protolog_syslog.PusherOptions{},
 			),
 		)
 	}
