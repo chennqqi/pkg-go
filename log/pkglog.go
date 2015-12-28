@@ -39,7 +39,6 @@ func SetupLogging(appName string, env Env) error {
 			pushers,
 			protolog.NewTextWritePusher(
 				os.Stderr,
-				protolog.MarshallerOptions{},
 			),
 		)
 	}
@@ -51,7 +50,6 @@ func SetupLogging(appName string, env Env) error {
 					Filename:   filepath.Join(env.LogDir, fmt.Sprintf("%s.log", appName)),
 					MaxBackups: 3,
 				},
-				protolog.MarshallerOptions{},
 			),
 		)
 	}
@@ -69,7 +67,6 @@ func SetupLogging(appName string, env Env) error {
 			pushers,
 			protolog_syslog.NewPusher(
 				writer,
-				protolog_syslog.PusherOptions{},
 			),
 		)
 	}
@@ -79,7 +76,6 @@ func SetupLogging(appName string, env Env) error {
 				protolog.NewMultiPusher(
 					pushers...,
 				),
-				protolog.LoggerOptions{},
 			),
 		)
 	} else {
