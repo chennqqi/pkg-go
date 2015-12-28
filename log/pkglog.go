@@ -85,11 +85,11 @@ func SetupLogging(appName string, env Env) error {
 	}
 	protolog.RedirectStdLogger()
 	if env.LogLevel != "" {
-		levelValue, ok := protolog.Level_value[fmt.Sprintf("LEVEL_%s", strings.ToUpper(env.LogLevel))]
-		if !ok {
-			return fmt.Errorf("pkglog: unknown log level: %s", env.LogLevel)
+		level, err := protolog.NameToLevel(strings.ToUpper(env.LogLevel))
+		if err != nil {
+			return err
 		}
-		protolog.SetLevel(protolog.Level(levelValue))
+		protolog.SetLevel(level)
 	}
 	return nil
 }

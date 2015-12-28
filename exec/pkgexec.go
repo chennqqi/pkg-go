@@ -30,7 +30,7 @@ func SetDebug(debug bool) {
 	defer lock.Unlock()
 	globalDebug = debug
 	if debug {
-		protolog.SetLogger(protolog.GlobalLogger().AtLevel(protolog.Level_LEVEL_DEBUG))
+		protolog.SetLogger(protolog.GlobalLogger().AtLevel(protolog.LevelDebug))
 	}
 }
 
