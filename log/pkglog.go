@@ -38,9 +38,7 @@ func SetupLogging(appName string, env Env) error {
 		pushers = append(
 			pushers,
 			protolog.NewTextWritePusher(
-				protolog.NewFileFlusher(
-					os.Stderr,
-				),
+				os.Stderr,
 				protolog.MarshallerOptions{},
 			),
 		)
@@ -49,12 +47,10 @@ func SetupLogging(appName string, env Env) error {
 		pushers = append(
 			pushers,
 			protolog.NewTextWritePusher(
-				protolog.NewWriterFlusher(
-					&lumberjack.Logger{
-						Filename:   filepath.Join(env.LogDir, fmt.Sprintf("%s.log", appName)),
-						MaxBackups: 3,
-					},
-				),
+				&lumberjack.Logger{
+					Filename:   filepath.Join(env.LogDir, fmt.Sprintf("%s.log", appName)),
+					MaxBackups: 3,
+				},
 				protolog.MarshallerOptions{},
 			),
 		)
