@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"go.pedge.io/protolog"
-	protosyslog "go.pedge.io/protolog/syslog"
+	"go.pedge.io/protolog/syslog"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -69,7 +69,7 @@ func SetupLogging(appName string, env Env) error {
 		}
 		pushers = append(
 			pushers,
-			protosyslog.NewDefaultTextPusher(
+			protolog_syslog.NewDefaultTextPusher(
 				writer,
 			),
 		)
