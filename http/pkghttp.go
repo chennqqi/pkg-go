@@ -85,7 +85,9 @@ func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http
 		},
 	}
 	protolog.Info(
-		&ServerStarting{},
+		&ServerStarting{
+			Port: uint32(appEnv.Port),
+		},
 	)
 	start := time.Now()
 	err = server.ListenAndServe()

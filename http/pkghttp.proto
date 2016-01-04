@@ -20,7 +20,9 @@ message ServerCouldNotStart {
   string error = 1;
 }
 
-message ServerStarting {}
+message ServerStarting {
+  uint32 port = 1;
+}
 
 message ServerFinished {
   string error = 1;
