@@ -30,8 +30,7 @@ var (
 // AppEnv is the struct that represents the environment variables used by ListenAndServe.
 type AppEnv struct {
 	// The port to serve on.
-	// Required.
-	Port uint16 `env:"PORT,required"`
+	Port uint16 `env:"PORT,default=8080"`
 	// HealthCheckPath is the path for healt checking.
 	// This path will always return 200 for a GET.
 	// Default value is /health.
