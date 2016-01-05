@@ -27,8 +27,8 @@ var (
 	ErrRequireHandler = errors.New("pkghttp: handler must be set")
 )
 
-// AppEnv is the struct that represents the environment variables used by ListenAndServe.
-type AppEnv struct {
+// HandlerEnv is the environment for a handler.
+type HandlerEnv struct {
 	// The port to serve on.
 	Port uint16 `env:"PORT,default=8080"`
 	// HealthCheckPath is the path for health checking.
@@ -38,6 +38,10 @@ type AppEnv struct {
 	// The time in seconds to shutdown after a SIGINT or SIGTERM.
 	// Default value is 10.
 	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC,default=10"`
+}
+
+// AppEnv is the struct that represents the environment variables used by ListenAndServe.
+type AppEnv struct {
 	// See pkglog for the log environment variables.
 	LogEnv pkglog.Env
 	// See pkgmetrics for the metrics environment variables.
@@ -46,29 +50,33 @@ type AppEnv struct {
 
 // HandlerOptions are options for a new http.Handler.
 type HandlerOptions struct {
-	// The port to serve on.
-	// Default value is 8080.
-	Port uint16 `env:"PORT,default=8080"`
-	// HealthCheckPath is the path for health checking.
-	// This path will always return 200 for a GET.
-	// Default value is /health.
-	HealthCheckPath string `env:"HEALTH_CHECK_PATH,default=/health"`
-	// The time in seconds to shutdown after a SIGINT or SIGTERM.
-	// Default value is 10.
-	ShutdownTimeoutSec uint64 `env:"SHUTDOWN_TIMEOUT_SEC,default=10"`
 	// The registry to use.
 	// Can be nil
 	MetricsRegistry metrics.Registry
 }
 
-// SetupAppEnv reads the environment variables for AppEnv and does the setup.
-func SetupAppEnv(appName string) (HandlerOptions, error) {
+// GetHandlerEnv gets the HandlerEnv from the environment.
+func GetHandlerEnv() (HandlerEnv, error) {
+	handlerEnv := HandlerEnv{}
+	if err := env.Populate(&handlerEnv); err != nil {
+		return HandlerEnv{}, err
+	}
+	return handlerEnv, nil
+}
+
+// GetAppEnv gets the AppEnv from the environment.
+func GetAppEnv() (AppEnv, error) {
+	appEnv := AppEnv{}
+	if err := env.Populate(&appEnv); err != nil {
+		return AppEnv{}, err
+	}
+	return appEnv, nil
+}
+
+// SetupAppEnv does the setup for AppEnv.
+func SetupAppEnv(appName string, appEnv AppEnv) (HandlerOptions, error) {
 	if appName == "" {
 		return HandlerOptions{}, ErrRequireAppName
-	}
-	appEnv := &AppEnv{}
-	if err := env.Populate(appEnv); err != nil {
-		return HandlerOptions{}, err
 	}
 	if err := pkglog.SetupLogging(appName, appEnv.LogEnv); err != nil {
 		return HandlerOptions{}, err
@@ -78,16 +86,13 @@ func SetupAppEnv(appName string) (HandlerOptions, error) {
 		return HandlerOptions{}, err
 	}
 	return HandlerOptions{
-		Port:               appEnv.Port,
-		HealthCheckPath:    appEnv.HealthCheckPath,
-		ShutdownTimeoutSec: appEnv.ShutdownTimeoutSec,
-		MetricsRegistry:    registry,
+		MetricsRegistry: registry,
 	}, nil
 }
 
 // NewWrapperHandler returns a new wrapper handler.
-func NewWrapperHandler(delegate http.Handler, options HandlerOptions) http.Handler {
-	return newWrapperHandler(delegate, options)
+func NewWrapperHandler(delegate http.Handler, handlerEnv HandlerEnv) http.Handler {
+	return newWrapperHandler(delegate, handlerEnv)
 }
 
 // ListenAndServe is the equivalent to http's method.
@@ -99,7 +104,15 @@ func NewWrapperHandler(delegate http.Handler, options HandlerOptions) http.Handl
 //
 // Uses a wrapper handler.
 func ListenAndServe(appName string, handlerProvider func(HandlerOptions) (http.Handler, error)) error {
-	options, err := SetupAppEnv(appName)
+	appEnv, err := GetAppEnv()
+	if err != nil {
+		return handleErrorBeforeStart(err)
+	}
+	handlerEnv, err := GetHandlerEnv()
+	if err != nil {
+		return handleErrorBeforeStart(err)
+	}
+	options, err := SetupAppEnv(appName, appEnv)
 	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
@@ -107,7 +120,7 @@ func ListenAndServe(appName string, handlerProvider func(HandlerOptions) (http.H
 	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
-	return ListenAndServeHandler(handler, options)
+	return ListenAndServeHandler(handler, handlerEnv)
 }
 
 // ListenAndServeHandler is the equivalent to http's method.
@@ -117,32 +130,32 @@ func ListenAndServe(appName string, handlerProvider func(HandlerOptions) (http.H
 // If the server starts, this will block until the server stops.
 //
 // Uses a wrapper handler.
-func ListenAndServeHandler(handler http.Handler, options HandlerOptions) error {
+func ListenAndServeHandler(handler http.Handler, handlerEnv HandlerEnv) error {
 	if handler == nil {
 		return handleErrorBeforeStart(ErrRequireHandler)
 	}
-	if options.Port == 0 {
-		options.Port = 8080
+	if handlerEnv.Port == 0 {
+		handlerEnv.Port = 8080
 	}
-	if options.HealthCheckPath == "" {
-		options.HealthCheckPath = "/health"
+	if handlerEnv.HealthCheckPath == "" {
+		handlerEnv.HealthCheckPath = "/health"
 	}
-	if options.ShutdownTimeoutSec == 0 {
-		options.ShutdownTimeoutSec = 10
+	if handlerEnv.ShutdownTimeoutSec == 0 {
+		handlerEnv.ShutdownTimeoutSec = 10
 	}
 	server := &graceful.Server{
-		Timeout: time.Duration(options.ShutdownTimeoutSec) * time.Second,
+		Timeout: time.Duration(handlerEnv.ShutdownTimeoutSec) * time.Second,
 		Server: &http.Server{
-			Addr: fmt.Sprintf(":%d", options.Port),
+			Addr: fmt.Sprintf(":%d", handlerEnv.Port),
 			Handler: NewWrapperHandler(
 				handler,
-				options,
+				handlerEnv,
 			),
 		},
 	}
 	protolog.Info(
 		&ServerStarting{
-			Port: uint32(options.Port),
+			Port: uint32(handlerEnv.Port),
 		},
 	)
 	start := time.Now()
