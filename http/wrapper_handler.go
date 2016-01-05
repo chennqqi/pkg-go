@@ -16,8 +16,12 @@ type wrapperHandler struct {
 	healthCheckPath string
 }
 
-func newWrapperHandler(handler http.Handler, healthCheckPath string) *wrapperHandler {
-	return &wrapperHandler{handler, healthCheckPath}
+func newWrapperHandler(handler http.Handler, options WrapperHandlerOPtions) *wrapperHandler {
+	wrapperHandler := &wrapperHandler{handler, options.HealthCheckPath}
+	if wrapperHandler.healthCheckPath == "" {
+		wrapperHandler.healthCheckPath = "/health"
+	}
+	return wrapperHandler
 }
 
 func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {

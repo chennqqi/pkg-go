@@ -31,7 +31,7 @@ var (
 type AppEnv struct {
 	// The port to serve on.
 	Port uint16 `env:"PORT,default=8080"`
-	// HealthCheckPath is the path for healt checking.
+	// HealthCheckPath is the path for health checking.
 	// This path will always return 200 for a GET.
 	// Default value is /health.
 	HealthCheckPath string `env:"HEALTH_CHECK_PATH,default=/health"`
@@ -44,18 +44,34 @@ type AppEnv struct {
 	MetricsEnv pkgmetrics.Env
 }
 
+// WrapperHandlerOptions are options for a new wrapper handler.
+type WrapperHandlerOptions struct {
+	// HealthCheckPath is the path for health checking.
+	// This path will always return 200 for a GET.
+	// Default value is /health.
+	HealthCheckPath string `env:"HEALTH_CHECK_PATH,default=/health"`
+}
+
+// NewWrapperHandler returns a new wrapper handler.
+func NewWrapperHandler(delegate http.Handler, options WrapperHandlerOptions) http.Handler {
+	return newWrapperHandler(delegate, options)
+}
+
+// HandlerOptions are options for a new http.Handler.
+//
+// Any of the options may be nil.
+type HandlerOptions struct {
+	MetricsRegistry metrics.Registry
+}
+
 // ListenAndServe is the equivalent to http's method.
 //
 // Sets up logging and metrics per the environment variables, intercepts requests and responses, handles SIGINT and SIGTERM.
 // When this returns, any errors will have been logged.
 // If the server starts, this will block until the server stops.
 //
-// Note that the metrics.Registry instance may be nil.
-func ListenAndServe(appName string, handlerProvider func(metrics.Registry) (http.Handler, error)) {
-	_ = listenAndServe(appName, handlerProvider)
-}
-
-func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http.Handler, error)) error {
+// Uses a wrapper handler.
+func ListenAndServe(appName string, handlerProvider func(HandlerOptions) (http.Handler, error)) error {
 	if appName == "" {
 		return handleErrorBeforeStart(ErrRequireAppName)
 	}
@@ -73,15 +89,24 @@ func listenAndServe(appName string, handlerProvider func(metrics.Registry) (http
 	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
-	handler, err := handlerProvider(registry)
+	handler, err := handlerProvider(
+		HandlerOptions{
+			MetricsRegistry: registry,
+		},
+	)
 	if err != nil {
 		return handleErrorBeforeStart(err)
 	}
 	server := &graceful.Server{
 		Timeout: time.Duration(appEnv.ShutdownTimeoutSec) * time.Second,
 		Server: &http.Server{
-			Addr:    fmt.Sprintf(":%d", appEnv.Port),
-			Handler: newWrapperHandler(handler, appEnv.HealthCheckPath),
+			Addr: fmt.Sprintf(":%d", appEnv.Port),
+			Handler: NewWrapperHandler(
+				handler,
+				WrapperHandlerOptions{
+					HealthCheckPath: appEnv.HealthCheckPath,
+				},
+			),
 		},
 	}
 	protolog.Info(
