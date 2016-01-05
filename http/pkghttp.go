@@ -13,7 +13,6 @@ import (
 
 	"go.pedge.io/env"
 	"go.pedge.io/pkg/app"
-	"go.pedge.io/pkg/http"
 	"go.pedge.io/proto/time"
 	"go.pedge.io/protolog"
 )
@@ -59,11 +58,11 @@ func ListenAndServeSimple(handler http.Handler) error {
 	if _, err := pkgapp.SetupAppEnv(appEnv); err != nil {
 		return err
 	}
-	handlerEnv, err := pkghttp.GetHandlerEnv()
+	handlerEnv, err := GetHandlerEnv()
 	if err != nil {
 		return err
 	}
-	return pkghttp.ListenAndServe(handler, handlerEnv)
+	return ListenAndServe(handler, handlerEnv)
 }
 
 // ListenAndServe is the equivalent to http's method.
