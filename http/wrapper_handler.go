@@ -16,7 +16,7 @@ type wrapperHandler struct {
 	healthCheckPath string
 }
 
-func newWrapperHandler(handler http.Handler, options WrapperHandlerOPtions) *wrapperHandler {
+func newWrapperHandler(handler http.Handler, options WrapperHandlerOptions) *wrapperHandler {
 	wrapperHandler := &wrapperHandler{handler, options.HealthCheckPath}
 	if wrapperHandler.healthCheckPath == "" {
 		wrapperHandler.healthCheckPath = "/health"
