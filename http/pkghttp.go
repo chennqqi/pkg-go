@@ -95,9 +95,29 @@ func NewWrapperHandler(delegate http.Handler, options HandlerOptions) http.Handl
 // Intercepts requests and responses, handles SIGINT and SIGTERM.
 // When this returns, any errors will have been logged.
 // If the server starts, this will block until the server stops.
+// Calls SetupAppEnv.
 //
 // Uses a wrapper handler.
-func ListenAndServe(handler http.Handler, options HandlerOptions) error {
+func ListenAndServe(appName string, handlerProvider func(HandlerOptions) (http.Handler, error)) error {
+	options, err := SetupAppEnv(appName)
+	if err != nil {
+		return handleErrorBeforeStart(err)
+	}
+	handler, err := handlerProvider(options)
+	if err != nil {
+		return handleErrorBeforeStart(err)
+	}
+	return ListenAndServeHandler(handler, options)
+}
+
+// ListenAndServeHandler is the equivalent to http's method.
+//
+// Intercepts requests and responses, handles SIGINT and SIGTERM.
+// When this returns, any errors will have been logged.
+// If the server starts, this will block until the server stops.
+//
+// Uses a wrapper handler.
+func ListenAndServeHandler(handler http.Handler, options HandlerOptions) error {
 	if handler == nil {
 		return handleErrorBeforeStart(ErrRequireHandler)
 	}
