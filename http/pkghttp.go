@@ -12,7 +12,6 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 
 	"go.pedge.io/env"
-	"go.pedge.io/pkg/app"
 	"go.pedge.io/proto/time"
 	"go.pedge.io/protolog"
 )
@@ -47,22 +46,6 @@ func GetHandlerEnv() (HandlerEnv, error) {
 // NewWrapperHandler returns a new wrapper handler.
 func NewWrapperHandler(delegate http.Handler, handlerEnv HandlerEnv) http.Handler {
 	return newWrapperHandler(delegate, handlerEnv)
-}
-
-// ListenAndServeSimple is ListenAndServe with environment variable setup.
-func ListenAndServeSimple(handler http.Handler) error {
-	appEnv, err := pkgapp.GetAppEnv()
-	if err != nil {
-		return err
-	}
-	if _, err := pkgapp.SetupAppEnv(appEnv); err != nil {
-		return err
-	}
-	handlerEnv, err := GetHandlerEnv()
-	if err != nil {
-		return err
-	}
-	return ListenAndServe(handler, handlerEnv)
 }
 
 // ListenAndServe is the equivalent to http's method.
@@ -112,6 +95,15 @@ func ListenAndServe(handler http.Handler, handlerEnv HandlerEnv) error {
 	}
 	protolog.Info(serverFinished)
 	return nil
+}
+
+// GetAndListenAndServe is GetHandlerEnv then ListenAndServe.
+func GetAndListenAndServe(handler http.Handler) error {
+	handlerEnv, err := GetHandlerEnv()
+	if err != nil {
+		return err
+	}
+	return ListenAndServe(handler, handlerEnv)
 }
 
 func handleErrorBeforeStart(err error) error {
