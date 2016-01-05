@@ -47,3 +47,12 @@ func SetupAppEnv(appEnv AppEnv) (AppOptions, error) {
 		MetricsRegistry: registry,
 	}, nil
 }
+
+// GetAndSetupAppEnv does GetAppEnv then SetupAppEnv.
+func GetAndSetupAppEnv() (AppOptions, error) {
+	appEnv, err := GetAppEnv()
+	if err != nil {
+		return AppOptions{}, err
+	}
+	return SetupAppEnv(appEnv)
+}
