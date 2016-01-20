@@ -6,7 +6,6 @@ package pkghttp // import "go.pedge.io/pkg/http"
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"text/template"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 
 	"go.pedge.io/env"
+	"go.pedge.io/pkg/tmpl"
 	"go.pedge.io/proto/time"
 	"go.pedge.io/protolog"
 )
@@ -108,22 +108,15 @@ func GetAndListenAndServe(handler http.Handler) error {
 	return ListenAndServe(handler, handlerEnv)
 }
 
-// Templater handles templates.
+// Templater is a pkgtmpl.Templater for http responses.
 type Templater interface {
 	WithFuncs(funcMap template.FuncMap) Templater
-	Execute(writer io.Writer, name string, data interface{}) error
+	Execute(responseWriter http.ResponseWriter, name string, data interface{})
 }
 
-// NewTemplater creates a new Templater.
+// NewTemplater returns a new Templater.
 func NewTemplater(baseDirPath string) Templater {
-	return newTemplater(baseDirPath)
-}
-
-// HTTPTemplateExecute does templater.Execute and errors with 500 if it fails.
-func HTTPTemplateExecute(templater Templater, responseWriter http.ResponseWriter, name string, data interface{}) {
-	if err := templater.Execute(responseWriter, name, data); err != nil {
-		ErrorInternal(responseWriter, err)
-	}
+	return newTemplater(pkgtmpl.NewTemplater(baseDirPath))
 }
 
 // Error does http.Error on the error if not nil, and returns true if not nil.

@@ -1,69 +1,26 @@
 package pkghttp
 
 import (
-	"io"
-	"path/filepath"
-	"strings"
-	"sync"
+	"net/http"
 	"text/template"
+
+	"go.pedge.io/pkg/tmpl"
 )
 
 type templater struct {
-	baseDirPath   string
-	funcMap       template.FuncMap
-	templateCache map[string]*template.Template
-	templateLock  *sync.RWMutex
+	delegate pkgtmpl.Templater
 }
 
-func newTemplater(baseDirPath string) *templater {
-	return &templater{
-		baseDirPath,
-		template.FuncMap{
-			"lowercase": strings.ToLower,
-			"uppercase": strings.ToUpper,
-		},
-		make(map[string]*template.Template),
-		&sync.RWMutex{},
-	}
+func newTemplater(delegate pkgtmpl.Templater) *templater {
+	return &templater{delegate}
 }
 
 func (h *templater) WithFuncs(funcMap template.FuncMap) Templater {
-	newFuncMap := make(template.FuncMap)
-	for key, value := range h.funcMap {
-		newFuncMap[key] = value
-	}
-	for key, value := range funcMap {
-		newFuncMap[key] = value
-	}
-	return &templater{
-		h.baseDirPath,
-		newFuncMap,
-		make(map[string]*template.Template),
-		&sync.RWMutex{},
-	}
+	return newTemplater(h.delegate.WithFuncs(funcMap))
 }
 
-func (h *templater) Execute(writer io.Writer, name string, data interface{}) error {
-	t, err := h.getTemplate(name)
-	if err != nil {
-		return err
+func (h *templater) Execute(responseWriter http.ResponseWriter, name string, data interface{}) {
+	if err := h.delegate.Execute(responseWriter, name, data); err != nil {
+		ErrorInternal(responseWriter, err)
 	}
-	return t.Execute(writer, data)
-}
-
-func (h *templater) getTemplate(name string) (*template.Template, error) {
-	h.templateLock.RLock()
-	if t, ok := h.templateCache[name]; ok {
-		h.templateLock.RUnlock()
-		return t, nil
-	}
-	h.templateLock.RUnlock()
-	t, err := template.New(name).Funcs(h.funcMap).ParseFiles(filepath.Join(h.baseDirPath, name))
-	if err != nil {
-		return nil, err
-	}
-	h.templateLock.Lock()
-	h.templateCache[name] = t
-	h.templateLock.Unlock()
-	return t, nil
 }
