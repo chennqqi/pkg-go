@@ -6,7 +6,9 @@ package pkghttp // import "go.pedge.io/pkg/http"
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"text/template"
 	"time"
 
 	"gopkg.in/tylerb/graceful.v1"
@@ -28,7 +30,7 @@ type HandlerEnv struct {
 	// HealthCheckPath is the path for health checking.
 	// This path will always return 200 for a GET.
 	// Default value is /health.
-	HealthCheckPath string `env:"HTTP_EALTH_CHECK_PATH,default=/health"`
+	HealthCheckPath string `env:"HTTP_HEALTH_CHECK_PATH,default=/health"`
 	// The time in seconds to shutdown after a SIGINT or SIGTERM.
 	// Default value is 10.
 	ShutdownTimeoutSec uint64 `env:"HTTP_SHUTDOWN_TIMEOUT_SEC,default=10"`
@@ -104,6 +106,38 @@ func GetAndListenAndServe(handler http.Handler) error {
 		return err
 	}
 	return ListenAndServe(handler, handlerEnv)
+}
+
+// Templater handles templates.
+type Templater interface {
+	WithFuncs(funcMap template.FuncMap) Templater
+	Execute(writer io.Writer, name string, data interface{}) error
+}
+
+// NewTemplater creates a new Templater.
+func NewTemplater(baseDirPath string) Templater {
+	return newTemplater(baseDirPath)
+}
+
+// HTTPTemplateExecute does templater.Execute and errors with 500 if it fails.
+func HTTPTemplateExecute(templater Templater, responseWriter http.ResponseWriter, name string, data interface{}) {
+	if err := templater.Execute(responseWriter, name, data); err != nil {
+		ErrorInternal(responseWriter, err)
+	}
+}
+
+// Error does http.Error on the error if not nil, and returns true if not nil.
+func Error(responseWriter http.ResponseWriter, statusCode int, err error) bool {
+	if err != nil {
+		http.Error(responseWriter, err.Error(), statusCode)
+		return true
+	}
+	return false
+}
+
+// ErrorInternal does Error 500.
+func ErrorInternal(responseWriter http.ResponseWriter, err error) bool {
+	return Error(responseWriter, http.StatusInternalServerError, err)
 }
 
 func handleErrorBeforeStart(err error) error {
