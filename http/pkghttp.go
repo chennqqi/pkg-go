@@ -133,6 +133,13 @@ func ErrorInternal(responseWriter http.ResponseWriter, err error) bool {
 	return Error(responseWriter, http.StatusInternalServerError, err)
 }
 
+// FileHandlerFunc returns a handler function for a file path.
+func FileHandlerFunc(filePath string) func(http.ResponseWriter, *http.Request) {
+	return func(responseWriter http.ResponseWriter, request *http.Request) {
+		http.ServeFile(responseWriter, request, filePath)
+	}
+}
+
 func handleErrorBeforeStart(err error) error {
 	protolog.Error(
 		&ServerCouldNotStart{
