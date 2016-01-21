@@ -7,12 +7,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"text/template"
 	"time"
 
 	"gopkg.in/tylerb/graceful.v1"
 
 	"go.pedge.io/env"
+	"go.pedge.io/pb/go/pb/money"
 	"go.pedge.io/pkg/tmpl"
 	"go.pedge.io/proto/time"
 	"go.pedge.io/protolog"
@@ -138,6 +140,53 @@ func FileHandlerFunc(filePath string) func(http.ResponseWriter, *http.Request) {
 	return func(responseWriter http.ResponseWriter, request *http.Request) {
 		http.ServeFile(responseWriter, request, filePath)
 	}
+}
+
+// QueryGet gets the string by key from the request query, if it exists.
+// Otherwise, returns "".
+func QueryGet(request *http.Request, key string) string {
+	return request.URL.Query().Get(key)
+}
+
+// QueryGetUint32 gets the uint32 by key from the request query, if it exists.
+// Otherwise, returns 0.
+// error returned if there is a parsing error.
+func QueryGetUint32(request *http.Request, key string) (uint32, error) {
+	valueString := QueryGet(request, key)
+	if valueString == "" {
+		return 0, nil
+	}
+	value, err := strconv.ParseUint(valueString, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(value), nil
+}
+
+// QueryGetFloat64 gets the float64 by key from the request query, if it exists.
+// Otherwise, returns 0.0.
+// error returned if there is a parsing error.
+func QueryGetFloat64(request *http.Request, key string) (float64, error) {
+	valueString := QueryGet(request, key)
+	if valueString == "" {
+		return 0.0, nil
+	}
+	return strconv.ParseFloat(valueString, 10)
+}
+
+// QueryGetMoney gets the money by key from the request query, if it exists.
+// Otherwise, returns nil.
+// Money is expected to be in float notation, ie $123.45 is 123.45.
+// error returned if there is a parsing error.
+func QueryGetMoney(request *http.Request, key string) (*pbmoney.Money, error) {
+	valueDollars, err := QueryGetFloat64(request, key)
+	if err != nil {
+		return nil, err
+	}
+	if valueDollars == 0.0 {
+		return nil, nil
+	}
+	return pbmoney.NewMoneyFloatUSD(valueDollars), nil
 }
 
 func handleErrorBeforeStart(err error) error {
