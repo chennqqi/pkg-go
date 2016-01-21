@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 
@@ -156,6 +157,7 @@ func QueryGetUint32(request *http.Request, key string) (uint32, error) {
 	if valueString == "" {
 		return 0, nil
 	}
+	valueString = strings.Replace(valueString, ",", "", -1)
 	value, err := strconv.ParseUint(valueString, 10, 32)
 	if err != nil {
 		return 0, err
@@ -171,7 +173,8 @@ func QueryGetFloat64(request *http.Request, key string) (float64, error) {
 	if valueString == "" {
 		return 0.0, nil
 	}
-	return strconv.ParseFloat(valueString, 10)
+	valueString = strings.Replace(valueString, ",", "", -1)
+	return strconv.ParseFloat(valueString, 64)
 }
 
 // QueryGetMoney gets the money by key from the request query, if it exists.
