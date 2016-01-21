@@ -10,7 +10,7 @@ import (
 func TestFibonacciEMemoFunc(t *testing.T) {
 	calls := 0
 	fibonacci := NewEMemoFunc(
-		func(i int, eMemoFunc EMemoFunc) (interface{}, error) {
+		func(i int, f func(int) (interface{}, error)) (interface{}, error) {
 			calls++
 			if i == 0 {
 				return uint64(0), nil
@@ -18,18 +18,18 @@ func TestFibonacciEMemoFunc(t *testing.T) {
 			if i == 1 {
 				return uint64(1), nil
 			}
-			n1, err := eMemoFunc.Do(i - 1)
+			n1, err := f(i - 1)
 			if err != nil {
 				return 0, err
 			}
-			n2, err := eMemoFunc.Do(i - 2)
+			n2, err := f(i - 2)
 			if err != nil {
 				return 0, err
 			}
 			return n1.(uint64) + n2.(uint64), nil
 		},
 	)
-	result, err := fibonacci.Do(93)
+	result, err := fibonacci(93)
 	require.NoError(t, err)
 	require.Equal(t, uint64(12200160415121876738), result.(uint64))
 	require.Equal(t, 94, calls)
@@ -38,7 +38,7 @@ func TestFibonacciEMemoFunc(t *testing.T) {
 func TestFibonacciEMemoFuncError(t *testing.T) {
 	calls := 0
 	fibonacci := NewEMemoFunc(
-		func(i int, eMemoFunc EMemoFunc) (interface{}, error) {
+		func(i int, f func(int) (interface{}, error)) (interface{}, error) {
 			calls++
 			if i == 0 {
 				return uint64(0), nil
@@ -49,18 +49,18 @@ func TestFibonacciEMemoFuncError(t *testing.T) {
 			if i == 5 {
 				return 0, fmt.Errorf("5")
 			}
-			n1, err := eMemoFunc.Do(i - 1)
+			n1, err := f(i - 1)
 			if err != nil {
 				return 0, err
 			}
-			n2, err := eMemoFunc.Do(i - 2)
+			n2, err := f(i - 2)
 			if err != nil {
 				return 0, err
 			}
 			return n1.(uint64) + n2.(uint64), nil
 		},
 	)
-	_, err := fibonacci.Do(93)
+	_, err := fibonacci(93)
 	require.Error(t, err, "5")
 	require.Equal(t, 89, calls)
 }
@@ -68,7 +68,7 @@ func TestFibonacciEMemoFuncError(t *testing.T) {
 func TestFibonacciMemoFunc(t *testing.T) {
 	calls := 0
 	fibonacci := NewMemoFunc(
-		func(i int, memoFunc MemoFunc) interface{} {
+		func(i int, f func(int) interface{}) interface{} {
 			calls++
 			if i == 0 {
 				return uint64(0)
@@ -76,9 +76,9 @@ func TestFibonacciMemoFunc(t *testing.T) {
 			if i == 1 {
 				return uint64(1)
 			}
-			return memoFunc.Do(i-1).(uint64) + memoFunc.Do(i-2).(uint64)
+			return f(i-1).(uint64) + f(i-2).(uint64)
 		},
 	)
-	require.Equal(t, uint64(12200160415121876738), fibonacci.Do(93))
+	require.Equal(t, uint64(12200160415121876738), fibonacci(93))
 	require.Equal(t, 94, calls)
 }
