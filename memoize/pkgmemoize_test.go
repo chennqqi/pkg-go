@@ -10,7 +10,7 @@ import (
 func TestFibonacciEMemoFunc(t *testing.T) {
 	calls := 0
 	fibonacci := NewEMemoFunc(
-		func(i int, f func(int) (interface{}, error)) (interface{}, error) {
+		func(i int, f EMemoFunc) (interface{}, error) {
 			calls++
 			if i == 0 {
 				return uint64(0), nil
@@ -38,7 +38,7 @@ func TestFibonacciEMemoFunc(t *testing.T) {
 func TestFibonacciEMemoFuncError(t *testing.T) {
 	calls := 0
 	fibonacci := NewEMemoFunc(
-		func(i int, f func(int) (interface{}, error)) (interface{}, error) {
+		func(i int, f EMemoFunc) (interface{}, error) {
 			calls++
 			if i == 0 {
 				return uint64(0), nil
@@ -68,7 +68,7 @@ func TestFibonacciEMemoFuncError(t *testing.T) {
 func TestFibonacciMemoFunc(t *testing.T) {
 	calls := 0
 	fibonacci := NewMemoFunc(
-		func(i int, f func(int) interface{}) interface{} {
+		func(i int, f MemoFunc) interface{} {
 			calls++
 			if i == 0 {
 				return uint64(0)
