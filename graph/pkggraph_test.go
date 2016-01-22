@@ -5,9 +5,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"go.pedge.io/lion/proto"
 
-	"go.pedge.io/protolog"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBuild(t *testing.T) {
@@ -181,7 +181,7 @@ func testNodeFunc(counter *int32, intC chan int, nodeName string, i int, errStri
 	return func() error {
 		atomic.AddInt32(counter, 1)
 		intC <- i
-		protolog.Infof("ran %s, sent %d, returning %v\n", nodeName, i, err)
+		protolion.Infof("ran %s, sent %d, returning %v\n", nodeName, i, err)
 		return err
 	}
 }

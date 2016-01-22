@@ -3,7 +3,7 @@ package pkggraph
 import (
 	"fmt"
 
-	"go.pedge.io/protolog"
+	"go.pedge.io/lion/proto"
 )
 
 type nodeRunner struct {
@@ -53,7 +53,7 @@ func (n *nodeRunner) addChild(childName string, childChan chan<- error) error {
 func (n *nodeRunner) run() error {
 	var err error
 	for name, parentChan := range n.parentChans {
-		protolog.Debug(&NodeWaiting{Node: n.nodeName, ParentNode: name})
+		protolion.Debug(&NodeWaiting{Node: n.nodeName, ParentNode: name})
 		select {
 		case parentErr := <-parentChan:
 			if parentErr != nil {
@@ -64,14 +64,14 @@ func (n *nodeRunner) run() error {
 			return err
 		}
 	}
-	protolog.Debug(&NodeFinishedWaiting{Node: n.nodeName, ParentError: errorString(err)})
+	protolion.Debug(&NodeFinishedWaiting{Node: n.nodeName, ParentError: errorString(err)})
 	if err == nil {
-		protolog.Info(&NodeStarting{Node: n.nodeName})
+		protolion.Info(&NodeStarting{Node: n.nodeName})
 		err = n.f()
-		protolog.Info(&NodeFinished{Node: n.nodeName, Error: errorString(err)})
+		protolion.Info(&NodeFinished{Node: n.nodeName, Error: errorString(err)})
 	}
 	for name, childChan := range n.childrenChans {
-		protolog.Debug(&NodeSending{Node: n.nodeName, ChildNode: name, Error: errorString(err)})
+		protolion.Debug(&NodeSending{Node: n.nodeName, ChildNode: name, Error: errorString(err)})
 		childChan <- err
 		close(childChan)
 	}

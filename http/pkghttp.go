@@ -15,10 +15,10 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 
 	"go.pedge.io/env"
+	"go.pedge.io/lion/proto"
+	"go.pedge.io/pb/go/google/protobuf"
 	"go.pedge.io/pb/go/pb/money"
 	"go.pedge.io/pkg/tmpl"
-	"go.pedge.io/proto/time"
-	"go.pedge.io/protolog"
 )
 
 var (
@@ -83,7 +83,7 @@ func ListenAndServe(handler http.Handler, handlerEnv HandlerEnv) error {
 			),
 		},
 	}
-	protolog.Info(
+	protolion.Info(
 		&ServerStarting{
 			Port: uint32(handlerEnv.Port),
 		},
@@ -91,14 +91,14 @@ func ListenAndServe(handler http.Handler, handlerEnv HandlerEnv) error {
 	start := time.Now()
 	err := server.ListenAndServe()
 	serverFinished := &ServerFinished{
-		Duration: prototime.DurationToProto(time.Since(start)),
+		Duration: google_protobuf.DurationToProto(time.Since(start)),
 	}
 	if err != nil {
 		serverFinished.Error = err.Error()
-		protolog.Error(serverFinished)
+		protolion.Error(serverFinished)
 		return err
 	}
-	protolog.Info(serverFinished)
+	protolion.Info(serverFinished)
 	return nil
 }
 
@@ -193,7 +193,7 @@ func QueryGetMoney(request *http.Request, key string) (*pbmoney.Money, error) {
 }
 
 func handleErrorBeforeStart(err error) error {
-	protolog.Error(
+	protolion.Error(
 		&ServerCouldNotStart{
 			Error: err.Error(),
 		},

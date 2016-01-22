@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"go.pedge.io/proto/time"
-	"go.pedge.io/protolog"
+	"go.pedge.io/lion/proto"
+	"go.pedge.io/pb/go/google/protobuf"
 )
 
 type wrapperHandler struct {
@@ -47,8 +47,8 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 			stack = stack[:runtime.Stack(stack, false)]
 			call.Error = fmt.Sprintf("panic: %v\n%s", recoverErr, string(stack))
 		}
-		call.Duration = prototime.DurationToProto(time.Since(start))
-		protolog.Info(call)
+		call.Duration = google_protobuf.DurationToProto(time.Since(start))
+		protolion.Info(call)
 	}()
 	if request.URL != nil && request.URL.Path == h.healthCheckPath {
 		wrapperResponseWriter.WriteHeader(http.StatusOK)
