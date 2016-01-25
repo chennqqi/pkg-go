@@ -3,17 +3,14 @@ package pkgapp // import "go.pedge.io/pkg/app"
 import (
 	"github.com/rcrowley/go-metrics"
 	"go.pedge.io/env"
-	"go.pedge.io/pkg/log"
+	"go.pedge.io/lion/env"
 	"go.pedge.io/pkg/metrics"
 )
 
 // AppEnv is the struct that represents the environment variables used by an app.
 type AppEnv struct {
-	// the app name.
-	// default is app.
-	AppName string `env:"APP_NAME,default=app"`
-	// See pkglog for the log environment variables.
-	LogEnv pkglog.Env
+	// See lion for the log environment variables.
+	LionEnv envlion.Env
 	// See pkgmetrics for the metrics environment variables.
 	MetricsEnv pkgmetrics.Env
 }
@@ -36,10 +33,10 @@ type AppOptions struct {
 
 // SetupAppEnv does the setup for AppEnv.
 func SetupAppEnv(appEnv AppEnv) (AppOptions, error) {
-	if err := pkglog.SetupLogging(appEnv.AppName, appEnv.LogEnv); err != nil {
+	if err := envlion.SetupEnv(appEnv.LionEnv); err != nil {
 		return AppOptions{}, err
 	}
-	registry, err := pkgmetrics.SetupMetrics(appEnv.AppName, appEnv.MetricsEnv)
+	registry, err := pkgmetrics.SetupMetrics(appEnv.LionEnv.LogAppName, appEnv.MetricsEnv)
 	if err != nil {
 		return AppOptions{}, err
 	}
