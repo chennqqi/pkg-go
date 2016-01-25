@@ -29,7 +29,7 @@ var (
 // HandlerEnv is the environment for a handler.
 type HandlerEnv struct {
 	// The port to serve on.
-	Port uint16 `env:"HTTP_PORT,default=8080"`
+	Port uint16 `env:"PORT,default=8080"`
 	// HealthCheckPath is the path for health checking.
 	// This path will always return 200 for a GET.
 	// Default value is /health.
