@@ -2,34 +2,45 @@ package pkgerrors // import "go.pedge.io/pkg/errors"
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 )
 
-// Error is an error.
-type Error struct {
-	Fields  map[string]interface{}
-	Message string
+// With adds the key/value pairs and returns a new Builder.
+func With(keyValues ...interface{}) *Builder {
+	return &Builder{getFields(keyValues, nil)}
 }
 
-// New creates a new Error with the given args as the message.
-func New(args ...interface{}) *Error {
-	return &Error{
-		nil,
-		fmt.Sprint(args...),
-	}
+// New creates a new error.
+func New(args ...interface{}) error {
+	return errors.New(fmt.Sprint(args...))
 }
 
-// Error returns an error string.
-func (e *Error) Error() string {
+// Builder is an error builder.
+type Builder struct {
+	fields map[string]interface{}
+}
+
+// With adds the key/value pairs and returns a new Builder.
+func (b *Builder) With(keyValues ...interface{}) *Builder {
+	return &Builder{getFields(keyValues, b.fields)}
+}
+
+// New creates a new error.
+func (b *Builder) New(args ...interface{}) error {
 	buffer := bytes.NewBuffer(nil)
-	if e.Message != "" {
-		_, _ = buffer.WriteString(e.Message)
-		if len(e.Fields) > 0 {
+	var message string
+	if len(args) > 0 {
+		message = fmt.Sprint(args...)
+	}
+	if message != "" {
+		_, _ = buffer.WriteString(message)
+		if len(b.fields) > 0 {
 			_ = buffer.WriteByte(' ')
 		}
 	}
 	first := false
-	for key, value := range e.Fields {
+	for key, value := range b.fields {
 		if !first {
 			_ = buffer.WriteByte(' ')
 			first = true
@@ -38,11 +49,10 @@ func (e *Error) Error() string {
 		_ = buffer.WriteByte('=')
 		_, _ = buffer.WriteString(fmt.Sprintf("%v", value))
 	}
-	return buffer.String()
+	return errors.New(buffer.String())
 }
 
-// With adds the key/value pairs and returns a new Error.
-func (e *Error) With(keyValues ...interface{}) *Error {
+func getFields(keyValues []interface{}, existingFields map[string]interface{}) map[string]interface{} {
 	if len(keyValues)%2 != 0 {
 		keyValues = append(keyValues, "MISSING")
 	}
@@ -50,11 +60,8 @@ func (e *Error) With(keyValues ...interface{}) *Error {
 	for i := 0; i < len(keyValues); i += 2 {
 		fields[fmt.Sprintf("%v", keyValues[i])] = keyValues[i+1]
 	}
-	for key, value := range e.Fields {
+	for key, value := range existingFields {
 		fields[key] = value
 	}
-	return &Error{
-		fields,
-		e.Message,
-	}
+	return fields
 }
