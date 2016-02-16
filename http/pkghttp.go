@@ -17,6 +17,7 @@ import (
 	"go.pedge.io/env"
 	"go.pedge.io/lion/proto"
 	"go.pedge.io/pb/go/google/protobuf"
+	"go.pedge.io/pb/go/google/type"
 	"go.pedge.io/pb/go/pb/money"
 	"go.pedge.io/pkg/tmpl"
 )
@@ -190,6 +191,21 @@ func QueryGetMoney(request *http.Request, key string) (*pbmoney.Money, error) {
 		return nil, nil
 	}
 	return pbmoney.NewMoneyFloatUSD(valueDollars), nil
+}
+
+// QueryGetDate gets the Date by key from the request query, if it exists.
+// Otherwise, returns nil.
+// The time format given will be used to parse the request value into a time.Time object.
+func QueryGetDate(request *http.Request, key string, timeFormat string) (*google_type.Date, error) {
+	valueString := QueryGet(request, key)
+	if valueString == "" {
+		return nil, nil
+	}
+	t, err := time.Parse(timeFormat, valueString)
+	if err != nil {
+		return nil, err
+	}
+	return google_type.TimeToDate(t), nil
 }
 
 func handleErrorBeforeStart(err error) error {
