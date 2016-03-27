@@ -8,6 +8,8 @@ package pkgyaml
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"strconv"
 
 	"gopkg.in/yaml.v2"
@@ -45,6 +47,27 @@ func ToJSON(p []byte, opts ToJSONOptions) ([]byte, error) {
 		return json.MarshalIndent(jsonData, "", defaultIndent)
 	}
 	return json.Marshal(jsonData)
+}
+
+// ParseYAMLOrJSON unmarshals the given file at filePath, switching based on the file extension.
+//
+// This uses the json tags on any fields, as json.Unmarshal is the unmarshalling function used.
+func ParseYAMLOrJSON(filePath string, v interface{}) (retErr error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	switch ext := filepath.Ext(filePath); ext {
+	case ".yml", ".yaml":
+		data, err = ToJSON(data, ToJSONOptions{})
+		if err != nil {
+			return err
+		}
+	case ".json":
+	default:
+		return fmt.Errorf("pkgyaml: %s is not a valid extension yml, yaml, or json", ext)
+	}
+	return json.Unmarshal(data, v)
 }
 
 func toJSON(yamlData interface{}) (interface{}, error) {

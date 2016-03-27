@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -19,6 +20,12 @@ func TestFilesEqual(t *testing.T) {
 	}
 }
 
+func TestParse(t *testing.T) {
+	for i := 1; i <= numFiles; i++ {
+		testParse(t, i)
+	}
+}
+
 func testFileEqual(t *testing.T, i int) {
 	yamlData := testReadData(t, fmt.Sprintf("testdata/%d.yml", i))
 	expectedJSONData := testRemarshalJSON(t, testReadData(t, fmt.Sprintf("testdata/%d.json", i)), i)
@@ -28,6 +35,20 @@ func testFileEqual(t *testing.T, i int) {
 	}
 	if !bytes.Equal(jsonData, expectedJSONData) {
 		t.Errorf("transform mismatch for file %d: expected %s, got %s", i, string(expectedJSONData), string(jsonData))
+	}
+}
+
+func testParse(t *testing.T, i int) {
+	var yamlMap interface{}
+	if err := ParseYAMLOrJSON(fmt.Sprintf("testdata/%d.yml", i), &yamlMap); err != nil {
+		t.Fatal(err)
+	}
+	var jsonMap interface{}
+	if err := ParseYAMLOrJSON(fmt.Sprintf("testdata/%d.json", i), &jsonMap); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(yamlMap, jsonMap) {
+		t.Fatalf("expected %v and %v to be equal", yamlMap, jsonMap)
 	}
 }
 
