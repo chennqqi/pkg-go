@@ -74,6 +74,13 @@ func RunOutput(args ...string) ([]byte, error) {
 	return stdout.Bytes(), err
 }
 
+// RunOutputDirPath runs the command with the given arguments in the given directory and returns the output of stdout.
+func RunOutputDirPath(dirPath string, args ...string) ([]byte, error) {
+	stdout := bytes.NewBuffer(nil)
+	err := RunIODirPath(IO{Stdout: stdout}, dirPath, args...)
+	return stdout.Bytes(), err
+}
+
 // RunIO runs the command with the given IO and arguments.
 func RunIO(ioObj IO, args ...string) error {
 	return RunIODirPath(ioObj, "", args...)
