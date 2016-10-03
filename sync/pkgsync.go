@@ -21,6 +21,16 @@ func NewDestroyable() Destroyable {
 	return newDestroyable()
 }
 
+// LazyLoader allows a function to be lazily atomically loaded.
+type LazyLoader interface {
+	Load() (interface{}, error)
+}
+
+// NewLazyLoader creates a new LazyLoader.
+func NewLazyLoader(f func() (interface{}, error)) LazyLoader {
+	return newLazyLoader(f)
+}
+
 // VolatileBool is a volatile bool.
 //
 // TODO(pedge): Is this even needed? Need to understand go memory model better.

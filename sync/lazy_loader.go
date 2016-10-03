@@ -5,16 +5,6 @@ import (
 	"sync/atomic"
 )
 
-// LazyLoader allows a function to be lazily atomically loaded.
-type LazyLoader interface {
-	Load() (interface{}, error)
-}
-
-// NewLazyLoader creates a new LazyLoader.
-func NewLazyLoader(f func() (interface{}, error)) LazyLoader {
-	return newLazyLoader(f)
-}
-
 type lazyLoader struct {
 	once  *sync.Once
 	f     func() (interface{}, error)
