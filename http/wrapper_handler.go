@@ -26,12 +26,7 @@ func newWrapperHandler(handler http.Handler, handlerEnv HandlerEnv) *wrapperHand
 
 func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
 	start := time.Now()
-	var wrapperResponseWriter wrapResponseWriter
-	if flusher, ok := responseWriter.(http.Flusher); ok {
-		wrapperResponseWriter = newWrapperResponseWriteFlusher(responseWriter, flusher)
-	} else {
-		wrapperResponseWriter = newWrapperResponseWriter(responseWriter)
-	}
+	wrapperResponseWriter := newWrapperResponseWriter(responseWriter)
 	defer func() {
 		call := &Call{
 			Method:         request.Method,
