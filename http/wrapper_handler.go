@@ -26,15 +26,20 @@ func newWrapperHandler(handler http.Handler, handlerEnv HandlerEnv) *wrapperHand
 
 func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
 	start := time.Now()
-	wrapperResponseWriter := newWrapperResponseWriter(responseWriter)
+	var wrapperResponseWriter wrapResponseWriter
+	if flusher, ok := responseWriter.(http.Flusher); ok {
+		wrapperResponseWriter = newWrapperResponseWriteFlusher(responseWriter, flusher)
+	} else {
+		wrapperResponseWriter = newWrapperResponseWriter(responseWriter)
+	}
 	defer func() {
 		call := &Call{
 			Method:         request.Method,
 			RequestHeader:  valuesMap(request.Header),
 			RequestForm:    valuesMap(request.Form),
 			ResponseHeader: valuesMap(wrapperResponseWriter.Header()),
-			StatusCode:     uint32(statusCode(wrapperResponseWriter.statusCode)),
-			Error:          errorString(wrapperResponseWriter.writeError),
+			StatusCode:     uint32(statusCode(wrapperResponseWriter.StatusCode())),
+			Error:          errorString(wrapperResponseWriter.WriteError()),
 		}
 		if request.URL != nil {
 			call.Path = request.URL.Path
