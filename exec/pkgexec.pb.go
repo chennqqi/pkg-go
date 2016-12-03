@@ -28,6 +28,13 @@ func (m *RunningCommand) String() string            { return proto.CompactTextSt
 func (*RunningCommand) ProtoMessage()               {}
 func (*RunningCommand) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+func (m *RunningCommand) GetArgs() string {
+	if m != nil {
+		return m.Args
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*RunningCommand)(nil), "pkgexec.RunningCommand")
 }
