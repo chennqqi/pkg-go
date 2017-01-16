@@ -28,6 +28,9 @@ func (h *wrapperHandler) ServeHTTP(responseWriter http.ResponseWriter, request *
 	start := time.Now()
 	wrapperResponseWriter := newWrapperResponseWriter(responseWriter)
 	defer func() {
+		if request.URL != nil && request.URL.Path == h.healthCheckPath {
+			return
+		}
 		call := &Call{
 			Method:         request.Method,
 			RequestHeader:  valuesMap(request.Header),
